@@ -9,7 +9,7 @@ Django Redis Panel integrates seamlessly into your existing Django admin interfa
 !!! note "No Models Required"
     This application doesn't introduce any Django models or require database migrations. It's purely a Redis management interface.
 
-![Admin Home](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/admin_home.png)
+![Admin Home](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/admin_home.png)
 
 **Features shown:**
 - Clean integration with Django admin styling
@@ -20,7 +20,7 @@ Django Redis Panel integrates seamlessly into your existing Django admin interfa
 
 The main landing page shows all configured Redis instances with their connection status and basic information.
 
-![Instance List](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/instances_list.png)
+![Instance List](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instances_list.png)
 
 **Features shown:**
 - Multiple Redis instance support
@@ -32,7 +32,7 @@ The main landing page shows all configured Redis instances with their connection
 
 Each Redis instance has a detailed overview page showing server information, database statistics, and quick navigation options.
 
-![Instance Overview](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/instance_overview.png)
+![Instance Overview](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instance_overview.png)
 
 **Features shown:**
 - Server information (version, uptime, memory usage)
@@ -45,7 +45,7 @@ Each Redis instance has a detailed overview page showing server information, dat
 
 The key search interface supports traditional page-based navigation, perfect for smaller datasets and when you need predictable page jumping.
 
-![Key Search - Page Index](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_page_index.png)
+![Key Search - Page Index](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_page_index.png)
 
 **Features shown:**
 - Search pattern input with examples
@@ -59,7 +59,7 @@ The key search interface supports traditional page-based navigation, perfect for
 
 For larger datasets, cursor-based pagination provides better performance and stability during data changes.
 
-![Key Search - Cursor](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_cursor.png)
+![Key Search - Cursor](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_cursor.png)
 
 **Features shown:**
 - Efficient cursor-based navigation
@@ -72,7 +72,7 @@ For larger datasets, cursor-based pagination provides better performance and sta
 
 String keys are displayed with syntax highlighting and full editing capabilities.
 
-![Key Detail - String](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_detail_string.png)
+![Key Detail - String](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_detail_string.png)
 
 **Features shown:**
 - Key information panel (name, type, TTL, size)
@@ -87,7 +87,7 @@ String keys are displayed with syntax highlighting and full editing capabilities
 
 Complex Redis data types like hashes are displayed in an organized, tabular format for easy browsing.
 
-![Key Detail - Hash](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_detail_hash.png)
+![Key Detail - Hash](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_detail_hash.png)
 
 **Features shown:**
 - Hash fields displayed in a clean table format

@@ -45,7 +45,7 @@ The instance overview page shows:
 - **Database Stats**: Total keys, expires, memory usage per database
 - **Quick Actions**: Direct links to browse keys
 
-![Instance Overview](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/instance_overview.png)
+![Instance Overview](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instance_overview.png)
 
 ## Step 4: Browse Redis Keys
 
@@ -56,7 +56,7 @@ The instance overview page shows:
    - **Database selector**: Switch between Redis databases
    - **Pagination controls**: Navigate through results
 
-![Key Search](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_page_index.png)
+![Key Search](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_page_index.png)
 
 ### Search Examples
 
@@ -76,7 +76,7 @@ Try these search patterns:
    - **Value display**: Formatted based on data type
    - **Actions**: Edit, delete, update TTL (if enabled)
 
-![Key Detail - String](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_detail_string.png)
+![Key Detail - String](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_detail_string.png)
 
 ### Data Type Examples
 

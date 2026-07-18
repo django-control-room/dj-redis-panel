@@ -1,7 +1,7 @@
 # Django Redis Panel
 
-[![Tests](https://github.com/yassi/dj-redis-panel/actions/workflows/test.yml/badge.svg)](https://github.com/yassi/dj-redis-panel/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/yassi/dj-redis-panel/branch/main/graph/badge.svg)](https://codecov.io/gh/yassi/dj-redis-panel)
+[![Tests](https://github.com/django-control-room/dj-redis-panel/actions/workflows/test.yml/badge.svg)](https://github.com/django-control-room/dj-redis-panel/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/django-control-room/dj-redis-panel/branch/main/graph/badge.svg)](https://codecov.io/gh/django-control-room/dj-redis-panel)
 [![PyPI version](https://badge.fury.io/py/dj-redis-panel.svg)](https://badge.fury.io/py/dj-redis-panel)
 [![Python versions](https://img.shields.io/pypi/pyversions/dj-redis-panel.svg)](https://pypi.org/project/dj-redis-panel/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,11 +9,11 @@
 
 A Django Admin panel for browsing, inspecting, and managing Redis keys. No postgres/mysql models or changes required.
 
-![Django Redis Panel - Instance List](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/instances_list.png)
+![Django Redis Panel - Instance List](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instances_list.png)
 
 ## Docs
 
-[https://yassi.github.io/dj-redis-panel/](https://yassi.github.io/dj-redis-panel/)
+[https://django-control-room.github.io/dj-redis-panel/](https://django-control-room.github.io/dj-redis-panel/)
 
 ## Features
 
@@ -75,32 +75,32 @@ will appear in the same places where your models appear.
 
 **NOTE:** This application does not actually introduce any model or migrations.
 
-![Admin Home](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/admin_home.png)
+![Admin Home](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/admin_home.png)
 
 ### Instance Overview
 Monitor your Redis instances with detailed metrics and database information.
 
-![Instance Overview](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/instance_overview.png)
+![Instance Overview](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instance_overview.png)
 
 ### Key Search - Page-based Pagination
 Search for keys with traditional page-based navigation.
 
-![Key Search - Page Index](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_page_index.png)
+![Key Search - Page Index](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_page_index.png)
 
 ### Key Search - Cursor-based Pagination  
 Efficient cursor-based pagination for large datasets.
 
-![Key Search - Cursor](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_cursor.png)
+![Key Search - Cursor](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_cursor.png)
 
 ### Key Detail - String Values
 View and edit string key values with TTL management.
 
-![Key Detail - String](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_detail_string.png)
+![Key Detail - String](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_detail_string.png)
 
 ### Key Detail - Other data structures
 Browse keys with more complex data structures such as hashes, lists, etc. 
 
-![Key Detail - Hash](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_detail_hash.png)
+![Key Detail - Hash](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_detail_hash.png)
 
 
 ## Installation
@@ -337,7 +337,7 @@ If you want to contribute to this project or set it up for local development:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yassi/dj-redis-panel.git
+git clone https://github.com/django-control-room/dj-redis-panel.git
 cd dj-redis-panel
 ```
 

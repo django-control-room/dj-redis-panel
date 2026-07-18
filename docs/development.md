@@ -42,7 +42,7 @@ Before setting up the development environment, make sure you have:
 
 ### 1. Fork and Clone
 
-1. **Fork the repository** on GitHub: [yassi/dj-redis-panel](https://github.com/yassi/dj-redis-panel)
+1. **Fork the repository** on GitHub: [django-control-room/dj-redis-panel](https://github.com/django-control-room/dj-redis-panel)
 
 2. **Clone your fork**:
    ```bash
@@ -52,7 +52,7 @@ Before setting up the development environment, make sure you have:
 
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/yassi/dj-redis-panel.git
+   git remote add upstream https://github.com/django-control-room/dj-redis-panel.git
    ```
 
 ### 2. Create Virtual Environment
@@ -275,8 +275,8 @@ Documentation is written in Markdown and located in the `docs/` directory:
 
 ### Development Questions
 
-- **GitHub Discussions**: [Project discussions](https://github.com/yassi/dj-redis-panel/discussions)
-- **Issues**: [Report bugs or request features](https://github.com/yassi/dj-redis-panel/issues)
+- **GitHub Discussions**: [Project discussions](https://github.com/django-control-room/dj-redis-panel/discussions)
+- **Issues**: [Report bugs or request features](https://github.com/django-control-room/dj-redis-panel/issues)
 - **Email**: Contact maintainers directly for sensitive issues
 
 ### Resources

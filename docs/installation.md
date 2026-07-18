@@ -177,7 +177,7 @@ If you encounter any issues during installation:
 
 - Check the [Configuration](configuration.md) guide for detailed settings
 - Review the [Quick Start](quick-start.md) guide
-- [Open an issue on GitHub](https://github.com/yassi/dj-redis-panel/issues)
+- [Open an issue on GitHub](https://github.com/django-control-room/dj-redis-panel/issues)
 
 ## Next Steps
 

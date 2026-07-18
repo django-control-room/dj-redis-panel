@@ -1,10 +1,10 @@
 site_name: Django Redis Panel
 site_description: A Django Admin panel for browsing, inspecting, and managing Redis keys
 site_author: Yasser Toruno
-site_url: https://yassi.github.io/dj-redis-panel/
+site_url: https://django-control-room.github.io/dj-redis-panel/
 
-repo_name: yassi/dj-redis-panel
-repo_url: https://github.com/yassi/dj-redis-panel
+repo_name: django-control-room/dj-redis-panel
+repo_url: https://github.com/django-control-room/dj-redis-panel
 
 theme:
   name: material

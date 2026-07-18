@@ -2,7 +2,7 @@
 
 A Django Admin panel for browsing, inspecting, and managing Redis keys. No PostgreSQL/MySQL models or changes required.
 
-![Django Redis Panel - Instance List](https://raw.githubusercontent.com/yassi/dj-redis-panel/main/images/key_search_page_index.png)
+![Django Redis Panel - Instance List](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/key_search_page_index.png)
 
 ## Overview
 
@@ -52,5 +52,5 @@ This project is licensed under the MIT License.
 ## Getting Help
 
 - 📖 [Read the full documentation](installation.md)
-- 🐛 [Report issues on GitHub](https://github.com/yassi/dj-redis-panel/issues)
-- 💡 [Request features](https://github.com/yassi/dj-redis-panel/issues/new)
+- 🐛 [Report issues on GitHub](https://github.com/django-control-room/dj-redis-panel/issues)
+- 💡 [Request features](https://github.com/django-control-room/dj-redis-panel/issues/new)
