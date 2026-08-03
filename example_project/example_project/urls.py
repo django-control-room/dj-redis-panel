@@ -20,5 +20,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/redis/", include("dj_redis_panel.urls")),
+    path("admin/dj-control-room/", include("dj_control_room.urls")),
+    path("admin/dj-control-room-base/", include("dj_control_room_base.urls")),
     path("admin/", admin.site.urls),
 ]

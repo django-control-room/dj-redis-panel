@@ -37,6 +37,7 @@ keywords = ["django", "redis", "admin", "panel", "database", "key-value"]
 dependencies = [
     "Django>=4.2",
     "redis>=4.0",
+    "dj-control-room-base>=1.4.0",
 ]
 
 [project.entry-points."dj_control_room.panels"]
