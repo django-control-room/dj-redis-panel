@@ -1,24 +1,19 @@
-{% extends "admin/base_site.html" %}
-{% load i18n admin_urls static admin_list %}
+{% extends "dj_control_room_base/panel_base.html" %}
+{% load i18n static %}
 
-{% block title %}{{ title }} | DJ Redis Panel{% endblock %}
+{% block panel_title %}{{ title|default:"DJ Redis Panel" }}{% endblock %}
 
-{% block extrahead %}
-{{ block.super }}
-{% if dj_cr_load_default_css %}<link rel="stylesheet" href="{% static 'dj_redis_panel/css/styles.css' %}">{% endif %}
-{{ dj_cr_extra_css }}
-{% endblock %}
-
-{% block branding %}
+{% block panel_branding %}
 <h1 id="site-name"><a href="{% url 'dj_redis_panel:index' %}">DJ Redis Panel</a></h1>
 {% endblock %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; {{ title }}
-</div>
+{% block panel_breadcrumbs %}
+&rsaquo; <a href="{% url 'dj_redis_panel:index' %}">{% trans "Redis Instances" %}</a>
 {% endblock %}
 
-{% block content %}
+{% block panel_styles %}
+<link rel="stylesheet" href="{% static 'dj_redis_panel/css/styles.css' %}">
+{% endblock %}
+
+{% block panel_content %}
 {% endblock %}

@@ -1,71 +1,84 @@
 {% load i18n %}
 {# Reusable pagination controls for key detail collections #}
-{# Parameters: collection_type (for labeling), position (top/bottom) #}
+{# Parameters: collection_type (for labeling) #}
 
-<div class="pagination-{% if position %}{{ position }}{% else %}info{% endif %}">
-    <p class="paginator">
-        {% if use_cursor_pagination %}
-            {% if has_more or current_cursor > 0 %}
+<div class="dcr-pagination">
+    {% if use_cursor_pagination %}
+        {% if has_more or current_cursor > 0 %}
+            <div class="dcr-pagination__summary">
                 {% if range_start and range_end %}
                     {% if collection_type == "hash" %}
-                        Showing fields {{ range_start }} - {{ range_end }} of {{ key_data.size }}
+                        {% blocktrans with start=range_start end=range_end total=key_data.size %}Showing fields {{ start }} - {{ end }} of {{ total }}{% endblocktrans %}
                     {% else %}
-                        Showing items {{ range_start }} - {{ range_end }} of {{ key_data.size }}
+                        {% blocktrans with start=range_start end=range_end total=key_data.size %}Showing items {{ start }} - {{ end }} of {{ total }}{% endblocktrans %}
                     {% endif %}
                 {% else %}
                     {% if collection_type == "hash" %}
-                        Showing {{ showing_count }} of {{ key_data.size }} fields (cursor: {{ current_cursor }})
+                        {% blocktrans with count=showing_count total=key_data.size cursor=current_cursor %}Showing {{ count }} of {{ total }} fields (cursor: {{ cursor }}){% endblocktrans %}
                     {% else %}
-                        Showing {{ showing_count }} of {{ key_data.size }} items (cursor: {{ current_cursor }})
+                        {% blocktrans with count=showing_count total=key_data.size cursor=current_cursor %}Showing {{ count }} of {{ total }} items (cursor: {{ cursor }}){% endblocktrans %}
                     {% endif %}
                 {% endif %}
-                <br>
+            </div>
+            <div class="dcr-pagination__controls">
                 {% if current_cursor > 0 %}
-                    <a href="?per_page={{ per_page }}&cursor=0" class="prev">{% trans 'first' %}</a>
+                    <a href="?per_page={{ per_page }}&cursor=0" class="dcr-pagination__btn dcr-pagination__btn--prev">{% trans "First" %}</a>
+                {% else %}
+                    <span class="dcr-pagination__btn dcr-pagination__btn--prev" aria-disabled="true">{% trans "First" %}</span>
                 {% endif %}
                 {% if has_more %}
-                    <a href="?per_page={{ per_page }}&cursor={{ next_cursor }}" class="next">{% trans 'next' %}</a>
-                {% endif %}
-            {% else %}
-                {% if collection_type == "hash" %}
-                    Showing all {{ key_data.size }} fields
+                    <a href="?per_page={{ per_page }}&cursor={{ next_cursor }}" class="dcr-pagination__btn dcr-pagination__btn--next">{% trans "Next" %}</a>
                 {% else %}
-                    Showing all {{ key_data.size }} items
+                    <span class="dcr-pagination__btn dcr-pagination__btn--next" aria-disabled="true">{% trans "Next" %}</span>
                 {% endif %}
-            {% endif %}
+            </div>
         {% else %}
-            {% if total_pages > 1 %}
-            Page {{ current_page }} of {{ total_pages }} 
-            {% if collection_type == "hash" %}
-                (showing {{ showing_count }} of {{ key_data.size }} fields)
-            {% else %}
-                (showing {{ showing_count }} of {{ key_data.size }} items)
-            {% endif %}
-            <br>
-            {% if has_previous %}
-                <a href="?per_page={{ per_page }}&page={{ previous_page }}" class="prev">{% trans 'previous' %}</a>
-            {% endif %}
-            
-            {% for num in page_range %}
-                {% if num == "..." %}
-                    …
-                {% elif num == current_page %}
-                    <span class="this-page">{{ num }}</span>
+            <div class="dcr-pagination__summary">
+                {% if collection_type == "hash" %}
+                    {% blocktrans with total=key_data.size %}Showing all {{ total }} fields{% endblocktrans %}
                 {% else %}
-                    <a href="?per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
+                    {% blocktrans with total=key_data.size %}Showing all {{ total }} items{% endblocktrans %}
                 {% endif %}
-            {% endfor %}
-            
-            {% if has_next %}
-                <a href="?per_page={{ per_page }}&page={{ next_page }}" class="next">{% trans 'next' %}</a>
-            {% endif %}
-            {% else %}
-            {% if collection_type == "hash" %}
-                Showing all {{ key_data.size }} fields
-            {% else %}
-                Showing all {{ key_data.size }} items
-            {% endif %}
-            {% endif %}
+            </div>
         {% endif %}
-    </p>
+    {% else %}
+        {% if total_pages > 1 %}
+            <div class="dcr-pagination__summary">
+                {% if collection_type == "hash" %}
+                    {% blocktrans with page=current_page total_pages=total_pages count=showing_count total=key_data.size %}Page {{ page }} of {{ total_pages }} (showing {{ count }} of {{ total }} fields){% endblocktrans %}
+                {% else %}
+                    {% blocktrans with page=current_page total_pages=total_pages count=showing_count total=key_data.size %}Page {{ page }} of {{ total_pages }} (showing {{ count }} of {{ total }} items){% endblocktrans %}
+                {% endif %}
+            </div>
+            <div class="dcr-pagination__controls">
+                {% if has_previous %}
+                    <a href="?per_page={{ per_page }}&page={{ previous_page }}" class="dcr-pagination__btn dcr-pagination__btn--prev">{% trans "Previous" %}</a>
+                {% else %}
+                    <span class="dcr-pagination__btn dcr-pagination__btn--prev" aria-disabled="true">{% trans "Previous" %}</span>
+                {% endif %}
+                {% for num in page_range %}
+                    {% if num == "..." %}
+                        <span class="dcr-pagination__page">&hellip;</span>
+                    {% elif num == current_page %}
+                        <span class="dcr-pagination__page dcr-pagination__page--active">{{ num }}</span>
+                    {% else %}
+                        <a href="?per_page={{ per_page }}&page={{ num }}" class="dcr-pagination__page">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if has_next %}
+                    <a href="?per_page={{ per_page }}&page={{ next_page }}" class="dcr-pagination__btn dcr-pagination__btn--next">{% trans "Next" %}</a>
+                {% else %}
+                    <span class="dcr-pagination__btn dcr-pagination__btn--next" aria-disabled="true">{% trans "Next" %}</span>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="dcr-pagination__summary">
+                {% if collection_type == "hash" %}
+                    {% blocktrans with total=key_data.size %}Showing all {{ total }} fields{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with total=key_data.size %}Showing all {{ total }} items{% endblocktrans %}
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
 </div>

@@ -1,3 +1,11 @@
 /*
  * DJ Redis Panel — panel-specific overrides.
  */
+
+.dcr-form--flush {
+    padding: 0;
+}
+
+.dcr-field .dcr-btn {
+    min-height: 42px;
+}

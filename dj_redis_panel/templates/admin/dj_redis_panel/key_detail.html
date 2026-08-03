@@ -1,190 +1,165 @@
 {% extends "admin/dj_redis_panel/base.html" %}
-{% load i18n admin_urls static %}
+{% load i18n static dcr_icons %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:index' %}">{% trans 'Redis Instances' %}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:instance_overview' instance_alias %}">{{ instance_alias }}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:key_search' instance_alias db_number %}">{% trans 'Search Keys' %} (db:{{ db_number }})</a>
-    &rsaquo; {{ key_data.name }}
-</div>
+{% block panel_breadcrumbs %}
+{{ block.super }}
+&rsaquo; <a href="{% url 'dj_redis_panel:instance_overview' instance_alias %}">{{ instance_alias }}</a>
+&rsaquo; <a href="{% url 'dj_redis_panel:key_search' instance_alias db_number %}">{% trans "Search Keys" %} (db:{{ db_number }})</a>
+&rsaquo; {{ key_data.name }}
 {% endblock %}
 
-{% block content %}
-<div class="module">
-    {% if success_message %}
-    <div class="messagelist">
-        <div class="success">{{ success_message }}</div>
-    </div>
-    {% endif %}
-    
-    {% if error_message %}
-    <div class="messagelist">
-        <div class="error">{{ error_message }}</div>
-    </div>
-    {% endif %}
+{% block panel_content %}
 
-    {% if key_data %}
-    <div class="module">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="margin: 0;">KEY: {{ key_data.name }}</h1>
-            {% if allow_key_delete %}
-            <form method="post" style="margin: 0;" onsubmit="return confirm('{% trans 'Are you sure you want to delete this key? This action cannot be undone.' %}');">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="delete_key">
-                <input type="submit" value="{% trans 'Delete Key' %}" class="deletelink delete-button">
-            </form>
-            {% else %}
-            <input type="button" value="{% trans 'Key Delete Disabled' %}" class="deletelink delete-button" disabled style="margin: 0;">
-            {% endif %}
-        </div>
-        
-        <!-- Key Information -->
-        <fieldset class="module aligned">
-            <h2>{% trans 'Key Information' %}</h2>
-            <br>
-            <div class="form-row">
-                <div class="field-box">
-                    <label><strong>{% trans 'Key Name:' %}</strong></label>
-                    <div class="readonly">
-                        <code>{{ key_data.name }}</code>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="field-box">
-                    <label><strong>{% trans 'Type:' %}</strong></label>
-                    <div class="readonly">
-                        <span class="key-type-badge key-type-{{ key_data.type }}">{{ key_data.type|upper }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="field-box">
-                    <label><strong>{% trans 'Size:' %}</strong></label>
-                    <div class="readonly">
-                        {% if key_data.type == "string" %}
-                            {{ key_data.size }} {% trans 'bytes' %}
-                        {% else %}
-                            {{ key_data.size }} {% trans 'elements' %}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="field-box">
-                    <label><strong>{% trans 'TTL:' %}</strong></label>
-                    <div class="readonly">
-                        {% if key_data.ttl %}
-                            {{ key_data.ttl }} {% trans 'seconds' %}
-                        {% else %}
-                            <span class="quiet">{% trans 'No expiration' %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-
-        <!-- TTL Management -->
-        <fieldset class="module aligned">
-            <h2>{% trans 'TTL Management' %}</h2>
-            <br>
-            {% if allow_ttl_update %}
-            <form method="post" class="ttl-form">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="update_ttl">
-                <div class="form-row">
-                    <div class="field-box">
-                        <label for="new_ttl">{% trans 'Set TTL (seconds):' %}</label>
-                        <input type="number" id="new_ttl" name="new_ttl" 
-                               value="{{ key_data.ttl|default:'' }}" 
-                               placeholder="{% trans 'Enter TTL' %}"
-                               class="vIntegerField">
-                        <div class="help">
-                            {% trans 'Set number of seconds until key expires. Leave empty or use -1 to remove expiration.' %}
-                        </div>
-                    </div>
-                    <div class="submit-row">
-                        <input type="submit" value="{% trans 'Update TTL' %}" class="default">
-                    </div>
-                </div>
-            </form>
-            {% else %}
-            <div class="form-row">
-                <div class="field-box">
-                    <label for="disabled_ttl">{% trans 'Set TTL (seconds):' %}</label>
-                    <input type="number" id="disabled_ttl" 
-                           value="{{ key_data.ttl|default:'' }}" 
-                           placeholder="{% trans 'Enter TTL' %}"
-                           class="vIntegerField" readonly disabled>
-                    <div class="help">
-                        {% trans 'TTL updates are disabled for this instance.' %}
-                    </div>
-                </div>
-                <div class="submit-row">
-                    <input type="button" value="{% trans 'TTL Update Disabled' %}" class="default" disabled>
-                </div>
-            </div>
-            {% endif %}
-        </fieldset>
-
-        <!-- Add Elements Section -->
-        {% include "admin/dj_redis_panel/key_detail_add.html" %}
-
-        <!-- Key Value Display and Editing -->
-        <fieldset class="module">
-            <h2>{% trans 'Key Value' %}</h2>
-            <br>
-            
-            {% if is_paginated and key_data.type != "string" %}
-            <!-- Per-page selector for collections -->
-            <div class="pagination-controls" style="margin-bottom: 20px;">
-                <form method="get" style="display: inline;">
-                    <label for="per_page_select">{% trans 'Items per page:' %}</label>
-                    <select id="per_page_select" name="per_page" onchange="this.form.submit()">
-                        <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                        <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
-                    </select>
-                    {# Do not include current page/cursor when changing per_page - this resets to beginning #}
-                </form>
-                {% if use_cursor_pagination %}
-                    <span style="margin-left: 20px; color: #666;">{% trans 'Using cursor-based pagination for better performance' %}</span>
-                {% endif %}
-            </div>
-            {% endif %}
-            <br>
-            
-            {% if key_data.type == "string" %}
-            {% include "admin/dj_redis_panel/key_detail_value_string.html" %}
-            
-            {% elif key_data.type == "list" %}
-            {% include "admin/dj_redis_panel/key_detail_value_list.html" %}
-            
-            {% elif key_data.type == "set" %}
-            {% include "admin/dj_redis_panel/key_detail_value_set.html" %}
-            
-            {% elif key_data.type == "zset" %}
-            {% include "admin/dj_redis_panel/key_detail_value_zset.html" %}
-            
-            {% elif key_data.type == "hash" %}
-            {% include "admin/dj_redis_panel/key_detail_value_hash.html" %}
-            
-            {% else %}
-            <div class="key-value-display">
-                <p class="quiet">{% trans 'Unsupported key type for display:' %} {{ key_data.type }}</p>
-            </div>
-            {% endif %}
-        </fieldset>
-
-
-    </div>
-    {% endif %}
+{% if success_message %}
+<div class="dcr-callout dcr-callout--success">
+  <p class="dcr-callout__body">{{ success_message }}</p>
 </div>
+{% endif %}
+
+{% if error_message %}
+<div class="dcr-callout dcr-callout--danger">
+  <p class="dcr-callout__body">{{ error_message }}</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dj_redis_panel:key_search' instance_alias db_number %}" class="dcr-back-link">{% trans "Back to Key Search" %}</a>
+
+{% if key_data %}
+
+<div class="dcr-page-header">
+  <div class="dcr-page-header__main">
+    <div class="dcr-page-header__icon dcr-icon-color--accent">
+      {% dcr_icon "database" %}
+    </div>
+    <div class="dcr-page-header__body">
+      <div class="dcr-page-header__title-row">
+        <h1 class="dcr-page-header__title dcr-font-mono">{{ key_data.name }}</h1>
+        <span class="dcr-badge dcr-badge--info">{{ key_data.type|upper }}</span>
+      </div>
+      <p class="dcr-page-header__subtitle">{{ instance_alias }}::DB{{ db_number }}</p>
+    </div>
+  </div>
+  <div class="dcr-page-header__actions">
+    {% if allow_key_delete %}
+    <form method="post" onsubmit="return confirm('{% trans "Are you sure you want to delete this key? This action cannot be undone." %}');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete_key">
+      <button type="submit" class="dcr-btn dcr-btn--danger">{% trans "Delete Key" %}</button>
+    </form>
+    {% else %}
+    <button type="button" class="dcr-btn dcr-btn--danger" disabled title="{% trans 'Key deletion is disabled for this instance' %}">{% trans "Delete Key" %}</button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="dcr-section-header">
+  <h2 class="dcr-section-header__title">{% trans "Key Information" %}</h2>
+</div>
+<dl class="dcr-dl">
+  <div class="dcr-dl__row">
+    <dt class="dcr-dl__label">{% trans "Key Name" %}</dt>
+    <dd class="dcr-dl__value dcr-dl__value--mono">{{ key_data.name }}</dd>
+  </div>
+  <div class="dcr-dl__row">
+    <dt class="dcr-dl__label">{% trans "Type" %}</dt>
+    <dd class="dcr-dl__value"><span class="dcr-badge dcr-badge--info">{{ key_data.type|upper }}</span></dd>
+  </div>
+  <div class="dcr-dl__row">
+    <dt class="dcr-dl__label">{% trans "Size" %}</dt>
+    <dd class="dcr-dl__value">
+      {% if key_data.type == "string" %}
+      {{ key_data.size }} {% trans "bytes" %}
+      {% else %}
+      {{ key_data.size }} {% trans "elements" %}
+      {% endif %}
+    </dd>
+  </div>
+  <div class="dcr-dl__row">
+    <dt class="dcr-dl__label">{% trans "TTL" %}</dt>
+    <dd class="dcr-dl__value">
+      {% if key_data.ttl %}
+      {{ key_data.ttl }} {% trans "seconds" %}
+      {% else %}
+      <span class="dcr-text-muted">{% trans "No expiration" %}</span>
+      {% endif %}
+    </dd>
+  </div>
+</dl>
+
+<div class="dcr-section-header dcr-mt-lg">
+  <h2 class="dcr-section-header__title">{% trans "TTL Management" %}</h2>
+</div>
+{% if allow_ttl_update %}
+<form method="post" class="dcr-form dcr-form--flush">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="update_ttl">
+  <div class="dcr-form__row">
+    <div class="dcr-field">
+      <label class="dcr-field__label" for="new_ttl">{% trans "Set TTL (seconds)" %}</label>
+      <input type="number" id="new_ttl" name="new_ttl" value="{{ key_data.ttl|default:'' }}"
+             placeholder="{% trans 'Enter TTL' %}" class="dcr-input">
+    </div>
+    <div class="dcr-field">
+      <label class="dcr-field__label" style="visibility:hidden">{% trans "Action" %}</label>
+      <button type="submit" class="dcr-btn dcr-btn--primary">{% trans "Update TTL" %}</button>
+    </div>
+  </div>
+  <p class="dcr-text-muted dcr-text-sm">
+    {% trans "Set number of seconds until key expires. Leave empty or use -1 to remove expiration." %}
+  </p>
+</form>
+{% else %}
+<div class="dcr-form dcr-form--flush">
+  <div class="dcr-form__row">
+    <div class="dcr-field">
+      <label class="dcr-field__label" for="disabled_ttl">{% trans "Set TTL (seconds)" %}</label>
+      <input type="number" id="disabled_ttl" value="{{ key_data.ttl|default:'' }}"
+             placeholder="{% trans 'Enter TTL' %}" class="dcr-input" readonly disabled>
+    </div>
+    <div class="dcr-field">
+      <label class="dcr-field__label" style="visibility:hidden">{% trans "Action" %}</label>
+      <button type="button" class="dcr-btn" disabled>{% trans "Update TTL" %}</button>
+    </div>
+  </div>
+  <p class="dcr-text-muted dcr-text-sm">{% trans "TTL updates are disabled for this instance." %}</p>
+</div>
+{% endif %}
+
+{% include "admin/dj_redis_panel/key_detail_add.html" %}
+
+<div class="dcr-section-header dcr-mt-lg">
+  <h2 class="dcr-section-header__title">{% trans "Key Value" %}</h2>
+  {% if is_paginated and key_data.type != "string" %}
+  <form method="get">
+    <div class="dcr-field">
+      <select id="per_page_select" name="per_page" class="dcr-select" onchange="this.form.submit()">
+        <option value="25" {% if per_page == 25 %}selected{% endif %}>25 {% trans "per page" %}</option>
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50 {% trans "per page" %}</option>
+        <option value="100" {% if per_page == 100 %}selected{% endif %}>100 {% trans "per page" %}</option>
+        <option value="200" {% if per_page == 200 %}selected{% endif %}>200 {% trans "per page" %}</option>
+      </select>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% if is_paginated and use_cursor_pagination and key_data.type != "string" %}
+<p class="dcr-text-muted dcr-text-sm dcr-mb-sm">{% trans "Using cursor-based pagination for better performance" %}</p>
+{% endif %}
+
+{% if key_data.type == "string" %}
+{% include "admin/dj_redis_panel/key_detail_value_string.html" %}
+{% elif key_data.type == "list" %}
+{% include "admin/dj_redis_panel/key_detail_value_list.html" %}
+{% elif key_data.type == "set" %}
+{% include "admin/dj_redis_panel/key_detail_value_set.html" %}
+{% elif key_data.type == "zset" %}
+{% include "admin/dj_redis_panel/key_detail_value_zset.html" %}
+{% elif key_data.type == "hash" %}
+{% include "admin/dj_redis_panel/key_detail_value_hash.html" %}
+{% else %}
+<p class="dcr-text-muted">{% trans "Unsupported key type for display:" %} {{ key_data.type }}</p>
+{% endif %}
+
+{% endif %}
+
 {% endblock %}
