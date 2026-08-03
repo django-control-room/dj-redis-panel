@@ -1,11 +1,9 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import admin
 from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
 from django.utils.decorators import method_decorator
-from .conf import get_css_context
+from .conf import panel_config
 from .redis_utils import RedisPanelUtils
 
 # Create your views here.
@@ -37,7 +35,7 @@ def _get_page_range(current_page, total_pages):
     return pages
 
 
-@staff_member_required
+@panel_config.permission_required("index")
 def index(request):
     instances = RedisPanelUtils.get_instances()
     redis_instances = []
@@ -56,16 +54,15 @@ def index(request):
 
         redis_instances.append(instance_info)
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": "DJ Redis Panel - Instances",
-        "redis_instances": redis_instances,
-    })
+    context = panel_config.get_context(
+        request,
+        title="DJ Redis Panel - Instances",
+        redis_instances=redis_instances,
+    )
     return render(request, "admin/dj_redis_panel/index.html", context)
 
 
-@staff_member_required
+@panel_config.permission_required("instance_overview")
 def instance_overview(request, instance_alias):
     # Get configured Redis instances
     instances = RedisPanelUtils.get_instances()
@@ -79,20 +76,19 @@ def instance_overview(request, instance_alias):
     # Get instance metadata using the utility method
     meta_data = RedisPanelUtils.get_instance_meta_data(instance_alias)
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": f"Instance Overview: {instance_alias}",
-        "instance_alias": instance_alias,
-        "instance_config": instance_config,
-        "hero_numbers": meta_data.get("hero_numbers", {}),
-        "databases": meta_data.get("databases", []),
-        "error_message": meta_data.get("error"),
-    })
+    context = panel_config.get_context(
+        request,
+        title=f"Instance Overview: {instance_alias}",
+        instance_alias=instance_alias,
+        instance_config=instance_config,
+        hero_numbers=meta_data.get("hero_numbers", {}),
+        databases=meta_data.get("databases", []),
+        error_message=meta_data.get("error"),
+    )
     return render(request, "admin/dj_redis_panel/instance_overview.html", context)
 
 
-@staff_member_required
+@panel_config.permission_required("key_search")
 def key_search(request, instance_alias, db_number):
     # Get configured Redis instances
     instances = RedisPanelUtils.get_instances()
@@ -180,10 +176,10 @@ def key_search(request, instance_alias, db_number):
             "has_more": False,
         }
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
+    context = panel_config.get_context(
+        request, title=f"{instance_alias}::DB{selected_db}::Key Search"
+    )
     context.update({
-        "title": f"{instance_alias}::DB{selected_db}::Key Search",
         "instance_alias": instance_alias,
         "instance_config": instance_config,
         "search_query": search_query,
@@ -213,7 +209,7 @@ def key_search(request, instance_alias, db_number):
     return render(request, "admin/dj_redis_panel/key_search.html", context)
 
 
-@method_decorator(staff_member_required, name="dispatch")
+@method_decorator(panel_config.permission_required("key_detail"), name="dispatch")
 class KeyDetailView(View):
     """Class-based view for displaying and editing Redis keys"""
 
@@ -799,8 +795,7 @@ class KeyDetailView(View):
 
     def _build_context(self, key_data, error_message=None, success_message=None):
         """Build template context"""
-        context = admin.site.each_context(self.request)
-        context.update(get_css_context())
+        context = panel_config.get_context(self.request)
         context.update({
             "instance_alias": self.instance_alias,
             "instance_config": self.instance_config,
@@ -847,7 +842,7 @@ class KeyDetailView(View):
         return context
 
 
-@staff_member_required
+@panel_config.permission_required("key_add")
 def key_add(request, instance_alias, db_number):
     """View for creating new Redis keys"""
     instances = RedisPanelUtils.get_instances()
@@ -896,15 +891,14 @@ def key_add(request, instance_alias, db_number):
                 else:
                     error_message = result["error"]
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": f"Add New Key - {instance_alias}::DB{selected_db}",
-        "instance_alias": instance_alias,
-        "instance_config": instance_config,
-        "selected_db": selected_db,
-        "allow_key_edit": allow_key_edit,
-        "error_message": error_message,
-        "success_message": success_message,
-    })
+    context = panel_config.get_context(
+        request,
+        title=f"Add New Key - {instance_alias}::DB{selected_db}",
+        instance_alias=instance_alias,
+        instance_config=instance_config,
+        selected_db=selected_db,
+        allow_key_edit=allow_key_edit,
+        error_message=error_message,
+        success_message=success_message,
+    )
     return render(request, "admin/dj_redis_panel/key_add.html", context)
