@@ -1,127 +1,136 @@
 {% extends "admin/dj_redis_panel/base.html" %}
-{% load i18n admin_urls static %}
+{% load i18n static dcr_icons %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:index' %}">{% trans 'Redis Instances' %}</a>
-    &rsaquo; {{ instance_alias }}
-</div>
+{% block panel_breadcrumbs %}
+{{ block.super }}
+&rsaquo; {{ instance_alias }}
 {% endblock %}
 
-{% block content %}
-<div class="module">
-    <!-- Instance Information -->
-    <div class="module">
-        <h2>{% trans 'System Information' %}</h2>
-        {% if error_message %}
-        <div class="errors">
-            <p><strong>{% trans 'Connection Error:' %}</strong> {{ error_message }}</p>
-        </div>
-        {% elif hero_numbers %}
-        <div class="instance-stats">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <strong>{% trans 'Redis Version' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.version }}</span>
-                </div>
-                <div class="stat-item">
-                    <strong>{% trans 'Memory Used' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.memory_used }}</span>
-                </div>
-                <div class="stat-item">
-                    <strong>{% trans 'Peak Memory' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.memory_peak }}</span>
-                </div>
-                <div class="stat-item">
-                    <strong>{% trans 'Connected Clients' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.connected_clients }}</span>
-                </div>
-                <div class="stat-item">
-                    <strong>{% trans 'Uptime' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.uptime|floatformat:0 }}s</span>
-                </div>
-                <div class="stat-item">
-                    <strong>{% trans 'Commands Processed' %}</strong><br>
-                    <span class="stat-value">{{ hero_numbers.total_commands_processed|floatformat:0 }}</span>
-                </div>
-                {% if hero_numbers.cluster_enabled is not None %}
-                <div class="stat-item">
-                    <strong>{% trans 'Cluster Mode' %}</strong><br>
-                    <span class="stat-value {% if hero_numbers.cluster_enabled %}stat-success{% else %}stat-disabled{% endif %}">
-                        {% if hero_numbers.cluster_enabled %}
-                            {% trans 'ENABLED' %}
-                        {% else %}
-                            {% trans 'DISABLED' %}
-                        {% endif %}
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
+{% block panel_content %}
 
-    <!-- Databases Overview -->
-    {% if databases and not error_message %}
-
-    <div class="module">
-        <h2>{% trans 'Databases' %}</h2>
-        <br>
-        <div class="results">
-            <table id="result_list">
-                <thead>
-                    <tr>
-                        <th scope="col">{% trans 'DB Name' %}</th>
-                        <th scope="col">{% trans 'Keys' %}</th>
-                        <th scope="col">{% trans 'Avg TTL (s)' %}</th>
-                        <th scope="col">{% trans 'Expires' %}</th>
-                        <th scope="col">{% trans 'Actions' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for db in databases %}
-                    <tr class="{% cycle 'row1' 'row2' %}">
-                        <td>
-                            <strong>DB {{ db.db_number }}</strong>
-                            {% if db.is_default %}
-                                <span class="default-badge">{% trans 'default' %}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if db.keys > 0 %}
-                                <strong>{{ db.keys|floatformat:0 }}</strong>
-                            {% else %}
-                                <span class="quiet">{% trans 'Empty' %}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if db.avg_ttl > 0 %}
-                                <span>{{ db.avg_ttl|floatformat:0 }}s</span>
-                            {% else %}
-                                <span class="quiet">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if db.expires > 0 %}
-                                {{ db.expires|floatformat:0 }}
-                            {% else %}
-                                <span class="quiet">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'dj_redis_panel:key_search' instance_alias db.db_number %}" class="default">
-                                {% trans 'Browse Keys' %}
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {% endif %}
-
+{% if error_message %}
+<div class="dcr-callout dcr-callout--danger">
+  <p class="dcr-callout__title">{% trans "Connection Error" %}</p>
+  <p class="dcr-callout__body">{{ error_message }}</p>
 </div>
+{% endif %}
+
+<a href="{% url 'dj_redis_panel:index' %}" class="dcr-back-link">{% trans "Back to Redis Instances" %}</a>
+
+<div class="dcr-page-header">
+  <div class="dcr-page-header__main">
+    <div class="dcr-page-header__icon dcr-icon-color--accent">
+      {% dcr_icon "database" %}
+    </div>
+    <div class="dcr-page-header__body">
+      <div class="dcr-page-header__title-row">
+        <h1 class="dcr-page-header__title dcr-font-mono">{{ instance_alias }}</h1>
+        {% if hero_numbers.cluster_enabled is not None %}
+        {% if hero_numbers.cluster_enabled %}
+        <span class="dcr-badge dcr-badge--info">{% trans "CLUSTER" %}</span>
+        {% endif %}
+        {% endif %}
+      </div>
+      <p class="dcr-page-header__subtitle">{% trans "Instance Overview" %}</p>
+    </div>
+  </div>
+</div>
+
+{% if hero_numbers %}
+<div class="dcr-section-header">
+  <h3 class="dcr-section-header__title">{% trans "System Information" %}</h3>
+</div>
+<div class="dcr-metric-grid">
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Redis Version" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.version }}</span>
+  </div>
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Memory Used" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.memory_used }}</span>
+  </div>
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Peak Memory" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.memory_peak }}</span>
+  </div>
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Connected Clients" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.connected_clients }}</span>
+  </div>
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Uptime" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.uptime|floatformat:0 }}s</span>
+  </div>
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Commands Processed" %}</span>
+    <span class="dcr-metric__value">{{ hero_numbers.total_commands_processed|floatformat:0 }}</span>
+  </div>
+  {% if hero_numbers.cluster_enabled is not None %}
+  <div class="dcr-metric">
+    <span class="dcr-metric__label">{% trans "Cluster Mode" %}</span>
+    <span class="dcr-metric__value{% if not hero_numbers.cluster_enabled %} dcr-metric__value--disabled{% endif %}">
+      {% if hero_numbers.cluster_enabled %}{% trans "ENABLED" %}{% else %}{% trans "DISABLED" %}{% endif %}
+    </span>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if databases and not error_message %}
+<div class="dcr-data-table dcr-mt-lg">
+  <div class="dcr-data-table__header">
+    <div class="dcr-data-table__header-info">
+      <h3 class="dcr-data-table__title">{% trans "Databases" %}</h3>
+    </div>
+  </div>
+  <div class="dcr-data-table__scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>{% trans "DB Name" %}</th>
+          <th class="dcr-col--right">{% trans "Keys" %}</th>
+          <th class="dcr-col--right">{% trans "Avg TTL (s)" %}</th>
+          <th class="dcr-col--right">{% trans "Expires" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for db in databases %}
+        <tr>
+          <td>
+            <a href="{% url 'dj_redis_panel:key_search' instance_alias db.db_number %}" class="dcr-data-table__link">
+              <strong>DB {{ db.db_number }}</strong>
+            </a>
+            {% if db.is_default %}
+            <span class="dcr-badge dcr-badge--muted">{% trans "default" %}</span>
+            {% endif %}
+          </td>
+          <td class="dcr-col--right">
+            {% if db.keys > 0 %}
+            <strong>{{ db.keys|floatformat:0 }}</strong>
+            {% else %}
+            <span class="dcr-text-muted">{% trans "Empty" %}</span>
+            {% endif %}
+          </td>
+          <td class="dcr-col--right">
+            {% if db.avg_ttl > 0 %}
+            {{ db.avg_ttl|floatformat:0 }}s
+            {% else %}
+            <span class="dcr-text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="dcr-col--right">
+            {% if db.expires > 0 %}
+            {{ db.expires|floatformat:0 }}
+            {% else %}
+            <span class="dcr-text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}

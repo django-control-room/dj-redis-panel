@@ -1,215 +1,215 @@
 {% extends "admin/dj_redis_panel/base.html" %}
-{% load i18n admin_urls static %}
+{% load i18n static dcr_icons %}
 
-
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:index' %}">{% trans 'Redis Instances' %}</a>
-    &rsaquo; <a href="{% url 'dj_redis_panel:instance_overview' instance_alias %}">{{ instance_alias }}</a>
-    &rsaquo; {% trans 'Search Keys' %} (db:{{ selected_db }})
-</div>
+{% block panel_breadcrumbs %}
+{{ block.super }}
+&rsaquo; <a href="{% url 'dj_redis_panel:instance_overview' instance_alias %}">{{ instance_alias }}</a>
+&rsaquo; {% trans "Search Keys" %} (db:{{ selected_db }})
 {% endblock %}
 
+{% block panel_content %}
 
-{% block content %}
-        <!-- Top Action Bar -->
-        <div class="top-action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <!-- Pagination Mode Indicator -->
-            <div class="pagination-mode-indicator">
-                {% if use_cursor_pagination %}
-                    <span class="badge cursor-mode">
-                        📄 {% trans 'CURSOR PAGINATION' %}
-                    </span>
-                {% else %}
-                    <span class="badge page-mode">
-                        🔢 {% trans 'PAGE PAGINATION' %}
-                    </span>
-                {% endif %}
-            </div>
-            
-                          <!-- Add New Key Button -->
-              <div>
-                  <button class="button default" onclick="window.location.href='{% url 'dj_redis_panel:key_add' instance_alias selected_db %}'">
-                      {% trans 'Add New Key' %}
-                  </button>
-              </div>
-        </div>
-
-
-
-<div class="module key-search">
-    {% if success_message %}
-    <div class="messagelist">
-        <div class="success">{{ success_message }}</div>
-    </div>
-    {% endif %}
-    
-    {% if error_message %}
-    <div class="messagelist">
-        <div class="error">{{ error_message }}</div>
-    </div>
-    {% endif %}
-    
-    <!-- Search Form -->
-    <div class="module">
-        <h2>{% trans 'Search Redis Keys' %}</h2>
-        <br>
-        <form method="get" class="search-form">
-            <div class="form-row search-form-row">
-                <div class="search-form-fields">
-                    <div class="search-field-group">
-                        <label for="q">{% trans 'Key Pattern:' %}</label>
-                        <input type="text" id="q" name="q" value="{{ search_query }}" 
-                               placeholder="*" class="vTextField" style="width: 300px;">
-                    </div>
-                    <div class="search-field-group">
-                        <label for="per_page">{% trans 'Per page:' %}</label>
-                        <select id="per_page" name="per_page" class="vTextField">
-                            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                        </select>
-                    </div>
-                    <div class="search-field-group">
-                        <label>&nbsp;</label> <!-- Empty label for alignment -->
-                        <input type="submit" value="{% trans 'Search' %}" class="default">
-                    </div>
-                </div>
-                <div class="search-help">
-                    <div class="help">{% trans 'Use * for wildcards, e.g., user:* or *:cache' %}</div>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Error Display -->
-    {% if error_message %}
-    <div class="module">
-        <div class="errors">
-            <p><strong>{% trans 'Error:' %}</strong> {{ error_message }}</p>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Results Summary -->
-    {% if not error_message %}
-    <div class="module">
-        <h2>{% trans 'Search Results' %}</h2>
-        <br>
-        <p class="help">
-            {% if use_cursor_pagination %}
-                {% if showing_keys > 0 %}
-                    {% blocktrans with count=showing_keys %}Showing {{ count }} keys{% endblocktrans %}
-                    {% if has_next %} - <span class="quiet">{% trans 'more available' %}</span>{% endif %}
-                    {% if current_cursor > 0 %}<br><em class="quiet">{% trans 'Cursor position' %}: {{ current_cursor }}</em>{% endif %}
-                {% else %}
-                    {% trans 'No keys found matching your search pattern.' %}
-                {% endif %}
-            {% else %}
-                {% if total_keys > 0 %}
-                    {% blocktrans with total=total_keys start=start_index end=end_index %}Found {{ total }} keys, showing {{ start }} to {{ end }}{% endblocktrans %}
-                    {% if total_keys >= 100000 %}
-                        <br><em>{% trans 'Search limited to first 100,000 matching keys. Refine your search pattern for more specific results.' %}</em>
-                    {% endif %}
-                {% else %}
-                    {% trans 'No keys found matching your search pattern.' %}
-                {% endif %}
-            {% endif %}
-        </p>
-    </div>
-    {% endif %}
-
-    <!-- Results Table -->
-    {% if keys_data and not error_message %}
-    <div class="results">
-        <table id="result_list">
-            <thead>
-                <tr>
-                    <th scope="col">{% trans 'Key' %}</th>
-                    <th scope="col">{% trans 'Type' %}</th>
-                    <th scope="col">{% trans 'Size/Length' %}</th>
-                    <th scope="col">{% trans 'TTL' %}</th>
-                    <th scope="col">{% trans 'Actions' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for key_info in keys_data %}
-                <tr class="{% cycle 'row1' 'row2' %}">
-                    <td>
-                        <strong>{{ key_info.key }}</strong>
-                    </td>
-                    <td>
-                        <span class="key-type key-type-{{ key_info.type }}">
-                            {{ key_info.type|upper }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if key_info.type == 'string' %}
-                            {{ key_info.size }} {% trans 'bytes' %}
-                        {% else %}
-                            {{ key_info.size }} {% trans 'items' %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if key_info.ttl %}
-                            {{ key_info.ttl }}s
-                        {% else %}
-                            <span class="quiet">{% trans 'No expiry' %}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'dj_redis_panel:key_detail' instance_alias selected_db key_info.key %}" class="viewlink">
-                            {% trans 'View' %}
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <!-- Pagination using exact Django admin structure -->
-        <p class="paginator" align="right">
-        {% if use_cursor_pagination %}
-            <!-- Cursor-based pagination: only previous/next navigation -->
-            {% if current_cursor > 0 %}
-                <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&cursor=0" class="prev">{% trans 'first' %}</a>
-            {% endif %}
-            
-            {% if has_next %}
-                <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&cursor={{ next_cursor }}" class="next">{% trans 'next' %}</a>
-            {% endif %}
-            
-            {% if total_keys > 0 %}
-                {% trans 'Cursor-based pagination' %} - {{ showing_keys }} {% trans 'keys shown' %}
-                {% if has_next %} ({% trans 'more available' %}){% endif %}
-            {% endif %}
-        {% else %}
-            <!-- Traditional page-based pagination -->
-            {% if total_pages > 1 %}
-                {% if has_previous %}
-                    <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ previous_page }}" class="prev">{% trans 'previous' %}</a>
-                {% endif %}
-                
-                {% for num in page_range %}
-                    {% if num == "..." %}
-                        …
-                    {% elif num == current_page %}
-                        <span class="this-page">{{ num }}</span>
-                    {% else %}
-                        <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ num }}">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if has_next %}
-                    <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ next_page }}" class="next">{% trans 'next' %}</a>
-                {% endif %}
-            {% endif %}
-            {{ total_keys }} {% blocktrans count counter=total_keys %}key{% plural %}keys{% endblocktrans %}
-        {% endif %}
-        </p>
-    </div>
-    {% endif %}
+{% if success_message %}
+<div class="dcr-callout dcr-callout--success">
+  <p class="dcr-callout__body">{{ success_message }}</p>
 </div>
+{% endif %}
+
+{% if error_message %}
+<div class="dcr-callout dcr-callout--danger">
+  <p class="dcr-callout__title">{% trans "Error" %}</p>
+  <p class="dcr-callout__body">{{ error_message }}</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dj_redis_panel:instance_overview' instance_alias %}" class="dcr-back-link">{% trans "Back to Instance Overview" %}</a>
+
+<div class="dcr-page-header">
+  <div class="dcr-page-header__main">
+    <div class="dcr-page-header__icon dcr-icon-color--accent">
+      {% dcr_icon "database" %}
+    </div>
+    <div class="dcr-page-header__body">
+      <div class="dcr-page-header__title-row">
+        <h1 class="dcr-page-header__title dcr-font-mono">{{ instance_alias }}::DB{{ selected_db }}</h1>
+        {% if use_cursor_pagination %}
+        <span class="dcr-badge dcr-badge--info">{% trans "CURSOR PAGINATION" %}</span>
+        {% else %}
+        <span class="dcr-badge dcr-badge--muted">{% trans "PAGE PAGINATION" %}</span>
+        {% endif %}
+      </div>
+      <p class="dcr-page-header__subtitle">{% trans "Search Redis Keys" %}</p>
+    </div>
+  </div>
+  <div class="dcr-page-header__actions">
+    <a href="{% url 'dj_redis_panel:key_add' instance_alias selected_db %}" class="dcr-btn dcr-btn--primary">{% trans "Add New Key" %}</a>
+  </div>
+</div>
+
+<div class="dcr-data-table">
+
+  <div class="dcr-data-table__header">
+    <div class="dcr-data-table__header-info">
+      <h3 class="dcr-data-table__title">
+        {% trans "Search Results" %}
+        {% if not error_message %}
+        <span class="dcr-badge">
+          {% if use_cursor_pagination %}{{ showing_keys }} {% trans "SHOWN" %}
+          {% else %}{{ total_keys }} {% trans "TOTAL" %}{% endif %}
+        </span>
+        {% endif %}
+      </h3>
+      <p class="dcr-data-table__subtitle">
+        {% if not error_message %}
+        {% if use_cursor_pagination %}
+          {% if showing_keys > 0 %}
+            {% blocktrans with count=showing_keys %}Showing {{ count }} keys{% endblocktrans %}
+            {% if has_next %} &middot; {% trans "more available" %}{% endif %}
+            {% if current_cursor > 0 %} &middot; {% trans "Cursor position" %}: {{ current_cursor }}{% endif %}
+          {% else %}
+            {% trans "No keys found matching your search pattern." %}
+          {% endif %}
+        {% else %}
+          {% if total_keys > 0 %}
+            {% blocktrans with total=total_keys start=start_index end=end_index %}Found {{ total }} keys, showing {{ start }} to {{ end }}{% endblocktrans %}
+            {% if total_keys >= 100000 %}
+              &middot; {% trans "Search limited to first 100,000 matching keys. Refine your search pattern for more specific results." %}
+            {% endif %}
+          {% else %}
+            {% trans "No keys found matching your search pattern." %}
+          {% endif %}
+        {% endif %}
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="dcr-data-table__controls">
+    <form class="dcr-form" method="get">
+      <div class="dcr-form__group">
+        <label class="dcr-form__label" for="q">{% trans "Key Pattern" %}</label>
+        <div class="dcr-form__row--stretch">
+          <div class="dcr-input-group">
+            <svg class="dcr-input-group__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="q" class="dcr-input-group__input" type="text" name="q" value="{{ search_query }}" placeholder="{% trans 'e.g. user:*, *:cache' %}">
+          </div>
+          <button type="submit" class="dcr-btn dcr-btn--primary">{% trans "Search" %}</button>
+        </div>
+      </div>
+      <div class="dcr-form__row">
+        <div class="dcr-field">
+          <label class="dcr-field__label" for="per_page">&#9663; {% trans "Per page" %}</label>
+          <select id="per_page" name="per_page" class="dcr-select">
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% if not error_message %}
+  <div class="dcr-data-table__scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>{% trans "Key" %}</th>
+          <th>{% trans "Type" %}</th>
+          <th class="dcr-col--right">{% trans "Size/Length" %}</th>
+          <th class="dcr-col--right">{% trans "TTL" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if keys_data %}
+        {% for key_info in keys_data %}
+        <tr>
+          <td>
+            <a href="{% url 'dj_redis_panel:key_detail' instance_alias selected_db key_info.key %}" class="dcr-data-table__link dcr-font-mono">{{ key_info.key }}</a>
+          </td>
+          <td>
+            <span class="dcr-badge dcr-badge--info">{{ key_info.type|upper }}</span>
+          </td>
+          <td class="dcr-col--right">
+            {% if key_info.type == 'string' %}
+            {{ key_info.size }} {% trans "bytes" %}
+            {% else %}
+            {{ key_info.size }} {% trans "items" %}
+            {% endif %}
+          </td>
+          <td class="dcr-col--right">
+            {% if key_info.ttl %}
+            {{ key_info.ttl }}s
+            {% else %}
+            <span class="dcr-text-muted">{% trans "No expiry" %}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="4">
+            <div class="dcr-empty">
+              <h2 class="dcr-empty__title">{% trans "No keys found" %}</h2>
+              <p class="dcr-empty__body">{% trans "No keys matched your search pattern. Try a broader pattern." %}</p>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if keys_data %}
+  <div class="dcr-pagination">
+    {% if use_cursor_pagination %}
+    <div class="dcr-pagination__summary">
+      {{ showing_keys }} {% trans "keys shown" %}{% if has_next %} &middot; {% trans "more available" %}{% endif %}
+    </div>
+    <div class="dcr-pagination__controls">
+      {% if current_cursor > 0 %}
+      <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&cursor=0" class="dcr-pagination__btn dcr-pagination__btn--prev">{% trans "First" %}</a>
+      {% else %}
+      <span class="dcr-pagination__btn dcr-pagination__btn--prev" aria-disabled="true">{% trans "First" %}</span>
+      {% endif %}
+      {% if has_next %}
+      <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&cursor={{ next_cursor }}" class="dcr-pagination__btn dcr-pagination__btn--next">{% trans "Next" %}</a>
+      {% else %}
+      <span class="dcr-pagination__btn dcr-pagination__btn--next" aria-disabled="true">{% trans "Next" %}</span>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="dcr-pagination__summary">
+      {{ total_keys }} {% blocktrans count counter=total_keys %}key{% plural %}keys{% endblocktrans %}
+    </div>
+    {% if total_pages > 1 %}
+    <div class="dcr-pagination__controls">
+      {% if has_previous %}
+      <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ previous_page }}" class="dcr-pagination__btn dcr-pagination__btn--prev">{% trans "Previous" %}</a>
+      {% else %}
+      <span class="dcr-pagination__btn dcr-pagination__btn--prev" aria-disabled="true">{% trans "Previous" %}</span>
+      {% endif %}
+      {% for num in page_range %}
+        {% if num == "..." %}
+        <span class="dcr-pagination__page">&hellip;</span>
+        {% elif num == current_page %}
+        <span class="dcr-pagination__page dcr-pagination__page--active">{{ num }}</span>
+        {% else %}
+        <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ num }}" class="dcr-pagination__page">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if has_next %}
+      <a href="?{% if search_query != '*' %}q={{ search_query|urlencode }}&{% endif %}per_page={{ per_page }}&page={{ next_page }}" class="dcr-pagination__btn dcr-pagination__btn--next">{% trans "Next" %}</a>
+      {% else %}
+      <span class="dcr-pagination__btn dcr-pagination__btn--next" aria-disabled="true">{% trans "Next" %}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+
 {% endblock %}

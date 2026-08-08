@@ -41,6 +41,7 @@ nav:
   - Getting Started:
     - Installation: installation.md
     - Configuration: configuration.md
+    - Scopes: scopes.md
     - Quick Start: quick-start.md
   - Features:
     - Features: features.md

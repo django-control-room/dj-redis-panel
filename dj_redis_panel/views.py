@@ -1,11 +1,9 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import admin
 from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
 from django.utils.decorators import method_decorator
-from .conf import get_css_context
+from .conf import panel_config
 from .redis_utils import RedisPanelUtils
 
 # Create your views here.
@@ -37,7 +35,7 @@ def _get_page_range(current_page, total_pages):
     return pages
 
 
-@staff_member_required
+@panel_config.permission_required("instance_list")
 def index(request):
     instances = RedisPanelUtils.get_instances()
     redis_instances = []
@@ -56,16 +54,15 @@ def index(request):
 
         redis_instances.append(instance_info)
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": "DJ Redis Panel - Instances",
-        "redis_instances": redis_instances,
-    })
+    context = panel_config.get_context(
+        request,
+        title="DJ Redis Panel - Instances",
+        redis_instances=redis_instances,
+    )
     return render(request, "admin/dj_redis_panel/index.html", context)
 
 
-@staff_member_required
+@panel_config.permission_required("instance_overview")
 def instance_overview(request, instance_alias):
     # Get configured Redis instances
     instances = RedisPanelUtils.get_instances()
@@ -79,20 +76,19 @@ def instance_overview(request, instance_alias):
     # Get instance metadata using the utility method
     meta_data = RedisPanelUtils.get_instance_meta_data(instance_alias)
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": f"Instance Overview: {instance_alias}",
-        "instance_alias": instance_alias,
-        "instance_config": instance_config,
-        "hero_numbers": meta_data.get("hero_numbers", {}),
-        "databases": meta_data.get("databases", []),
-        "error_message": meta_data.get("error"),
-    })
+    context = panel_config.get_context(
+        request,
+        title=f"Instance Overview: {instance_alias}",
+        instance_alias=instance_alias,
+        instance_config=instance_config,
+        hero_numbers=meta_data.get("hero_numbers", {}),
+        databases=meta_data.get("databases", []),
+        error_message=meta_data.get("error"),
+    )
     return render(request, "admin/dj_redis_panel/instance_overview.html", context)
 
 
-@staff_member_required
+@panel_config.permission_required("key_search")
 def key_search(request, instance_alias, db_number):
     # Get configured Redis instances
     instances = RedisPanelUtils.get_instances()
@@ -180,40 +176,46 @@ def key_search(request, instance_alias, db_number):
             "has_more": False,
         }
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": f"{instance_alias}::DB{selected_db}::Key Search",
-        "instance_alias": instance_alias,
-        "instance_config": instance_config,
-        "search_query": search_query,
-        "selected_db": selected_db,
-        "keys_data": keys_data,
-        "total_keys": total_keys,
-        "showing_keys": len(keys_data),
-        "error_message": error_message,
-        "success_message": success_message,
-        "per_page": per_page,
-        "current_page": scan_result["page"],
-        "total_pages": scan_result["total_pages"],
-        "has_previous": scan_result["page"] > 1,
-        "has_next": scan_result["has_more"],
-        "previous_page": scan_result["page"] - 1 if scan_result["page"] > 1 else None,
-        "next_page": scan_result["page"] + 1 if scan_result["has_more"] else None,
-        "start_index": (scan_result["page"] - 1) * scan_result["per_page"] + 1,
-        "end_index": min(
-            (scan_result["page"] - 1) * scan_result["per_page"] + len(keys_data),
-            total_keys,
-        ),
-        "page_range": _get_page_range(scan_result["page"], scan_result["total_pages"]),
-        "use_cursor_pagination": use_cursor_pagination,
-        "current_cursor": scan_result.get("current_cursor", 0),
-        "next_cursor": scan_result.get("next_cursor", 0),
-    })
+    context = panel_config.get_context(
+        request, title=f"{instance_alias}::DB{selected_db}::Key Search"
+    )
+    context.update(
+        {
+            "instance_alias": instance_alias,
+            "instance_config": instance_config,
+            "search_query": search_query,
+            "selected_db": selected_db,
+            "keys_data": keys_data,
+            "total_keys": total_keys,
+            "showing_keys": len(keys_data),
+            "error_message": error_message,
+            "success_message": success_message,
+            "per_page": per_page,
+            "current_page": scan_result["page"],
+            "total_pages": scan_result["total_pages"],
+            "has_previous": scan_result["page"] > 1,
+            "has_next": scan_result["has_more"],
+            "previous_page": scan_result["page"] - 1
+            if scan_result["page"] > 1
+            else None,
+            "next_page": scan_result["page"] + 1 if scan_result["has_more"] else None,
+            "start_index": (scan_result["page"] - 1) * scan_result["per_page"] + 1,
+            "end_index": min(
+                (scan_result["page"] - 1) * scan_result["per_page"] + len(keys_data),
+                total_keys,
+            ),
+            "page_range": _get_page_range(
+                scan_result["page"], scan_result["total_pages"]
+            ),
+            "use_cursor_pagination": use_cursor_pagination,
+            "current_cursor": scan_result.get("current_cursor", 0),
+            "next_cursor": scan_result.get("next_cursor", 0),
+        }
+    )
     return render(request, "admin/dj_redis_panel/key_search.html", context)
 
 
-@method_decorator(staff_member_required, name="dispatch")
+@method_decorator(panel_config.permission_required("key_detail"), name="dispatch")
 class KeyDetailView(View):
     """Class-based view for displaying and editing Redis keys"""
 
@@ -799,55 +801,56 @@ class KeyDetailView(View):
 
     def _build_context(self, key_data, error_message=None, success_message=None):
         """Build template context"""
-        context = admin.site.each_context(self.request)
-        context.update(get_css_context())
-        context.update({
-            "instance_alias": self.instance_alias,
-            "instance_config": self.instance_config,
-            "db_number": self.db_number,
-            "key_data": key_data,
-            "error_message": error_message,
-            "success_message": success_message,
-            "allow_key_delete": self.allow_key_delete,
-            "allow_key_edit": self.allow_key_edit,
-            "allow_ttl_update": self.allow_ttl_update,
-            # Pagination context
-            "per_page": self.per_page,
-            "is_paginated": key_data.get("is_paginated", False),
-            "showing_count": key_data.get("showing_count", 0),
-            "has_more": key_data.get("has_more", False),
-            "use_cursor_pagination": self.use_cursor_pagination,
-            "pagination_type": key_data.get("pagination_type", "page"),
-            # Page-based pagination context
-            "current_page": key_data.get("page", 1),
-            "total_pages": key_data.get("total_pages", 0),
-            "has_previous": key_data.get("page", 1) > 1
-            if not self.use_cursor_pagination
-            else False,
-            "has_next": key_data.get("has_more", False),
-            "previous_page": key_data.get("page", 1) - 1
-            if key_data.get("page", 1) > 1 and not self.use_cursor_pagination
-            else None,
-            "next_page": key_data.get("page", 1) + 1
-            if key_data.get("has_more", False) and not self.use_cursor_pagination
-            else None,
-            "start_index": key_data.get("start_index", 0),
-            "end_index": key_data.get("end_index", 0),
-            "page_range": _get_page_range(
-                key_data.get("page", 1), key_data.get("total_pages", 0)
-            )
-            if not self.use_cursor_pagination
-            else [],
-            # Cursor-based pagination context
-            "current_cursor": key_data.get("cursor", 0),
-            "next_cursor": key_data.get("next_cursor", 0),
-            "range_start": key_data.get("range_start"),
-            "range_end": key_data.get("range_end"),
-        })
+        context = panel_config.get_context(self.request)
+        context.update(
+            {
+                "instance_alias": self.instance_alias,
+                "instance_config": self.instance_config,
+                "db_number": self.db_number,
+                "key_data": key_data,
+                "error_message": error_message,
+                "success_message": success_message,
+                "allow_key_delete": self.allow_key_delete,
+                "allow_key_edit": self.allow_key_edit,
+                "allow_ttl_update": self.allow_ttl_update,
+                # Pagination context
+                "per_page": self.per_page,
+                "is_paginated": key_data.get("is_paginated", False),
+                "showing_count": key_data.get("showing_count", 0),
+                "has_more": key_data.get("has_more", False),
+                "use_cursor_pagination": self.use_cursor_pagination,
+                "pagination_type": key_data.get("pagination_type", "page"),
+                # Page-based pagination context
+                "current_page": key_data.get("page", 1),
+                "total_pages": key_data.get("total_pages", 0),
+                "has_previous": key_data.get("page", 1) > 1
+                if not self.use_cursor_pagination
+                else False,
+                "has_next": key_data.get("has_more", False),
+                "previous_page": key_data.get("page", 1) - 1
+                if key_data.get("page", 1) > 1 and not self.use_cursor_pagination
+                else None,
+                "next_page": key_data.get("page", 1) + 1
+                if key_data.get("has_more", False) and not self.use_cursor_pagination
+                else None,
+                "start_index": key_data.get("start_index", 0),
+                "end_index": key_data.get("end_index", 0),
+                "page_range": _get_page_range(
+                    key_data.get("page", 1), key_data.get("total_pages", 0)
+                )
+                if not self.use_cursor_pagination
+                else [],
+                # Cursor-based pagination context
+                "current_cursor": key_data.get("cursor", 0),
+                "next_cursor": key_data.get("next_cursor", 0),
+                "range_start": key_data.get("range_start"),
+                "range_end": key_data.get("range_end"),
+            }
+        )
         return context
 
 
-@staff_member_required
+@panel_config.permission_required("key_add")
 def key_add(request, instance_alias, db_number):
     """View for creating new Redis keys"""
     instances = RedisPanelUtils.get_instances()
@@ -896,15 +899,14 @@ def key_add(request, instance_alias, db_number):
                 else:
                     error_message = result["error"]
 
-    context = admin.site.each_context(request)
-    context.update(get_css_context())
-    context.update({
-        "title": f"Add New Key - {instance_alias}::DB{selected_db}",
-        "instance_alias": instance_alias,
-        "instance_config": instance_config,
-        "selected_db": selected_db,
-        "allow_key_edit": allow_key_edit,
-        "error_message": error_message,
-        "success_message": success_message,
-    })
+    context = panel_config.get_context(
+        request,
+        title=f"Add New Key - {instance_alias}::DB{selected_db}",
+        instance_alias=instance_alias,
+        instance_config=instance_config,
+        selected_db=selected_db,
+        allow_key_edit=allow_key_edit,
+        error_message=error_message,
+        success_message=success_message,
+    )
     return render(request, "admin/dj_redis_panel/key_add.html", context)
