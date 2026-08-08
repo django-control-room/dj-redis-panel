@@ -15,15 +15,17 @@ Before installing Django Redis Panel, make sure you have:
 
 ### 1. Install the Package
 
-Install Django Redis Panel using pip:
+Install Django Redis Panel along with [Django Control Room](https://github.com/django-control-room/dj-control-room):
 
 ```bash
-pip install dj-redis-panel
+pip install dj-redis-panel dj-control-room
 ```
+
+`dj-control-room-base` (the shared core library) is pulled in automatically as a dependency.
 
 ### 2. Add to Django Settings
 
-Add `dj_redis_panel` to your `INSTALLED_APPS` in your Django settings file:
+Add `dj_control_room_base`, the panel, and `dj_control_room` to your `INSTALLED_APPS`:
 
 ```python
 # settings.py
@@ -34,13 +36,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dj_redis_panel',  # Add this line
+    'dj_control_room_base',  # core lib — required for templates/static
+    'dj_redis_panel',
+    'dj_control_room',       # hub — registers panels in the Control Room dashboard
     # ... your other apps
 ]
 ```
 
 !!! note
-    Django Redis Panel doesn't require any database migrations as it doesn't define any Django models.
+    Django Redis Panel doesn't require any database migrations as it doesn't define any Django models. `dj_control_room_base` must still be listed in `INSTALLED_APPS` so Django can discover its template tags and static assets.
 
 ### 3. Configure Redis Instances
 
@@ -107,7 +111,7 @@ Add your Redis configuration to your Django settings:
 
 ### 4. Include URLs
 
-Add the Django Redis Panel URLs to your main `urls.py` file:
+Add the Control Room and Redis Panel URLs to your main `urls.py` file (panel URLs must sit under the admin prefix, and before `admin.site.urls`):
 
 ```python
 # urls.py
@@ -115,15 +119,23 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/redis/', include('dj_redis_panel.urls')),  # Add this line
+    path('admin/dj-control-room-base/', include('dj_control_room_base.urls')),
+    path('admin/dj-redis-panel/', include('dj_redis_panel.urls')),
+    path('admin/dj-control-room/', include('dj_control_room.urls')),
     path('admin/', admin.site.urls),
 ]
 ```
 
 !!! tip
-    You can change the URL path from `admin/redis/` to any path you prefer, such as `redis/` or `db/redis/`.
+    You can change the Redis Panel URL path from `admin/dj-redis-panel/` to any path you prefer, such as `admin/redis/`.
 
-### 5. Create Admin User (if needed)
+### 5. Run Migrations
+
+```bash
+python manage.py migrate
+```
+
+### 6. Create Admin User (if needed)
 
 If you don't already have a Django admin superuser, create one:
 
@@ -131,7 +143,7 @@ If you don't already have a Django admin superuser, create one:
 python manage.py createsuperuser
 ```
 
-### 6. Start the Development Server
+### 7. Start the Development Server
 
 Start your Django development server:
 
@@ -139,12 +151,12 @@ Start your Django development server:
 python manage.py runserver
 ```
 
-### 7. Access the Panel
+### 8. Access the Panel
 
 1. Navigate to the Django admin at `http://127.0.0.1:8000/admin/`
 2. Log in with your admin credentials
-3. Look for the **"DJ_REDIS_PANEL"** section in the admin interface
-4. Click **"Manage Redis keys and values"** to start browsing your Redis instances
+3. Look for the **"DJ REDIS PANEL"** section (or open the Control Room dashboard at `/admin/dj-control-room/`)
+4. Click through to start browsing your Redis instances
 
 ## Verification
 
@@ -165,11 +177,11 @@ To verify that everything is working correctly:
 **Permission denied**
 : Ensure you're logged in as a staff user with admin access.
 
-**Module not found**
-: Make sure `dj_redis_panel` is properly installed and added to `INSTALLED_APPS`.
+**Module not found / `'dcr_icons' is not a registered tag library`**
+: Make sure `dj_redis_panel`, `dj_control_room_base`, and `dj_control_room` are installed and listed in `INSTALLED_APPS` (base must be present for template tags and static assets).
 
 **URLs not found**
-: Verify that you've included the Redis Panel URLs in your main `urls.py` file.
+: Verify that you've included the Redis Panel (and Control Room) URLs in your main `urls.py` file.
 
 ### Getting Help
 
