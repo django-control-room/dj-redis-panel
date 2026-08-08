@@ -119,7 +119,6 @@
           <th>{% trans "Type" %}</th>
           <th class="dcr-col--right">{% trans "Size/Length" %}</th>
           <th class="dcr-col--right">{% trans "TTL" %}</th>
-          <th class="dcr-col--right">{% trans "Actions" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -146,16 +145,11 @@
             <span class="dcr-text-muted">{% trans "No expiry" %}</span>
             {% endif %}
           </td>
-          <td class="dcr-col--right">
-            <a href="{% url 'dj_redis_panel:key_detail' instance_alias selected_db key_info.key %}" class="dcr-data-table__link">
-              {% trans "View" %}
-            </a>
-          </td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-          <td colspan="5">
+          <td colspan="4">
             <div class="dcr-empty">
               <h2 class="dcr-empty__title">{% trans "No keys found" %}</h2>
               <p class="dcr-empty__body">{% trans "No keys matched your search pattern. Try a broader pattern." %}</p>
