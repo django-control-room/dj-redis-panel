@@ -1,5 +1,4 @@
-# Development Setup
-
+# Contributing
 This guide will help you set up Django Redis Panel for local development and contribution.
 
 ## Prerequisites
