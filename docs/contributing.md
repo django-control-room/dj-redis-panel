@@ -241,8 +241,6 @@ make docker_down
 
 **Note**: SSL testing is completely optional. All tests and development work without SSL certificates.
 
-For detailed SSL setup instructions, see [SSL Cluster Setup Guide](ssl-cluster-setup.md).
-
 ## Documentation Development
 
 ### Building Documentation

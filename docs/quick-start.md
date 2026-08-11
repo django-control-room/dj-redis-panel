@@ -230,5 +230,4 @@ Now that you're familiar with the basics:
 
 - [Explore all features](features.md) in detail
 - [Learn about configuration options](configuration.md)
-- [View screenshots](screenshots.md) of all interfaces
-- [Understand Redis data types](redis-data-types.md) support
+- [View screenshots](features.md) of all interfaces
