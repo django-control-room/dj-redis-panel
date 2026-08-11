@@ -51,6 +51,6 @@ This project is licensed under the MIT License.
 
 ## Getting Help
 
-- 📖 [Read the full documentation](installation.md)
-- 🐛 [Report issues on GitHub](https://github.com/django-control-room/dj-redis-panel/issues)
-- 💡 [Request features](https://github.com/django-control-room/dj-redis-panel/issues/new)
+- [Read the full documentation](installation.md)
+- [Report issues on GitHub](https://github.com/django-control-room/dj-redis-panel/issues)
+- [Request features](https://github.com/django-control-room/dj-redis-panel/issues/new)

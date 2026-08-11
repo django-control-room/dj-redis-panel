@@ -417,4 +417,4 @@ DJ_REDIS_PANEL_SETTINGS = {
 
 - [Quick Start Guide](quick-start.md) - Get started with your configured instances
 - [Features Overview](features.md) - Learn about all available features
-- [Development Setup](development.md) - Set up for local development
+- [Contributing](contributing.md) - Set up for local development

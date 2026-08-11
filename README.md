@@ -13,7 +13,7 @@ A Django Admin panel for browsing, inspecting, and managing Redis keys. No postg
 
 ![Django Redis Panel - Instance List](https://raw.githubusercontent.com/django-control-room/dj-redis-panel/main/images/instances_list.png)
 
-**Compatible with [dj-control-room](https://github.com/django-control-room/dj-control-room).** Register this panel in the Control Room to manage it from a centralized dashboard.
+**Compatible with [dj-control-room](https://django-control-room.github.io/dj-control-room/).** Register this panel in the Control Room to manage it from a centralized dashboard.
 
 - **Official site:** [djangocontrolroom.com](https://djangocontrolroom.com)
 - **Project repo:** [dj-control-room](https://github.com/django-control-room/dj-control-room)
@@ -118,10 +118,10 @@ For the full walkthrough and production recommendations, see the [Installation](
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/django-control-room/dj-redis-panel/blob/main/LICENSE) file for details.
 
 ---
 
-## Development Setup
+## Contributing
 
-Want to contribute or set up the project for local development? See [docs/development.md](docs/development.md) for prerequisites, Docker/virtualenv setup, running the example project, and the test suite.
+Want to contribute or set up the project for local development? See [Contributing](https://django-control-room.github.io/dj-redis-panel/contributing/) for prerequisites, Docker/virtualenv setup, running the example project, and the test suite.

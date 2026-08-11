@@ -1,5 +1,4 @@
-# Development Setup
-
+# Contributing
 This guide will help you set up Django Redis Panel for local development and contribution.
 
 ## Prerequisites
@@ -241,8 +240,6 @@ make docker_down
 ```
 
 **Note**: SSL testing is completely optional. All tests and development work without SSL certificates.
-
-For detailed SSL setup instructions, see [SSL Cluster Setup Guide](ssl-cluster-setup.md).
 
 ## Documentation Development
 
