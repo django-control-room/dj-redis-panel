@@ -3,6 +3,7 @@ from dj_redis_panel.redis_utils import RedisPanelUtils
 import json
 import random
 from datetime import datetime, timedelta
+import redis.exceptions
 
 
 class Command(BaseCommand):
@@ -308,12 +309,12 @@ class Command(BaseCommand):
                 redis_conn.json().set(json_key, "$", json_value)
                 json_keys_created += 1
                 created_keys += 1
-            except Exception as e:
+            except redis.exceptions.ResponseError as e:
                 # RedisJSON module not available, skip JSON keys
-                if "unknown command" in str(e).lower() or "json" in str(e).lower():
+                if "unknown command 'JSON.SET'" in str(e):
                     self.stdout.write(
                         self.style.WARNING(
-                            f"      RedisJSON module not available, skipping JSON keys"
+                            "      RedisJSON module not available, skipping JSON keys"
                         )
                     )
                     break
@@ -321,6 +322,10 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(f"      Error creating JSON key: {e}")
                     )
+            except Exception as e:
+                self.stdout.write(
+                    self.style.WARNING(f"      Error creating JSON key: {e}")
+                )
 
         # Create lists
         for i in range(list_count):

@@ -16,7 +16,7 @@ def pretty_json(value):
         Pretty-printed JSON string with 2-space indentation,
         or original value if not valid JSON
     """
-    if not value:
+    if value is None:
         return value
     
     try:
@@ -26,6 +26,9 @@ def pretty_json(value):
             return json.dumps(parsed, indent=2, ensure_ascii=False)
         # If already a dict/list, just dump it
         elif isinstance(value, (dict, list)):
+            return json.dumps(value, indent=2, ensure_ascii=False)
+        # Serialize native JSON primitives (bool, int, float)
+        elif isinstance(value, (bool, int, float)):
             return json.dumps(value, indent=2, ensure_ascii=False)
         else:
             return value
