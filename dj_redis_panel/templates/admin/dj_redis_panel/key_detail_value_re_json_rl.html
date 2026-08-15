@@ -1,0 +1,10 @@
+{% load i18n json_filters %}
+{# String value display and editing template #}
+
+<div class="dcr-code-viewer">
+  <div class="dcr-code-viewer__header">
+    <span class="dcr-code-viewer__label">&lt;&gt; {% trans "JSON Value" %}</span>
+  </div>
+  <pre>{{ key_data.value|pretty_json }}</pre>
+</div>
+<p class="dcr-text-muted dcr-text-sm">{% trans "Value editing is disabled for this instance." %}</p>

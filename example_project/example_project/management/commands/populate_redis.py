@@ -150,7 +150,8 @@ class Command(BaseCommand):
             options = {}
 
         # Key type distribution (percentages)
-        string_ratio = 0.70  # 70% strings
+        string_ratio = 0.65  # 65% strings
+        json_ratio = 0.05  # 5% JSON (using json().set())
         list_ratio = 0.10  # 10% lists
         set_ratio = 0.08  # 8% sets
         hash_ratio = 0.08  # 8% hashes
@@ -158,6 +159,7 @@ class Command(BaseCommand):
 
         # Calculate counts for each type
         string_count = int(key_count * string_ratio)
+        json_count = int(key_count * json_ratio)
         list_count = int(key_count * list_ratio)
         set_count = int(key_count * set_ratio)
         hash_count = int(key_count * hash_ratio)
@@ -165,7 +167,7 @@ class Command(BaseCommand):
 
         # Lets add some string keys in case we are short on keys
         total_allocated = sum(
-            [string_count, list_count, set_count, hash_count, zset_count]
+            [string_count, json_count, list_count, set_count, hash_count, zset_count]
         )
         if total_allocated < key_count:
             string_count += key_count - total_allocated
@@ -283,6 +285,43 @@ class Command(BaseCommand):
 
             created_keys += 1
 
+        # Create JSON keys using json().set()
+        json_keys_created = 0
+        for i in range(json_count):
+            json_key = f"json:data:{i}:db{db_num}"
+            json_value = {
+                "id": i,
+                "name": f"Item {i}",
+                "value": random.randint(1, 1000),
+                "active": random.choice([True, False]),
+                "metadata": {
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": (datetime.now() + timedelta(hours=random.randint(1, 24))).isoformat(),
+                    "tags": [f"tag_{j}" for j in range(random.randint(1, 5))],
+                },
+                "nested": {
+                    "field1": f"value_{random.randint(1, 100)}",
+                    "field2": random.uniform(0.0, 100.0),
+                },
+            }
+            try:
+                redis_conn.json().set(json_key, "$", json_value)
+                json_keys_created += 1
+                created_keys += 1
+            except Exception as e:
+                # RedisJSON module not available, skip JSON keys
+                if "unknown command" in str(e).lower() or "json" in str(e).lower():
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"      RedisJSON module not available, skipping JSON keys"
+                        )
+                    )
+                    break
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(f"      Error creating JSON key: {e}")
+                    )
+
         # Create lists
         for i in range(list_count):
             list_key = f"list:queue:{i}:db{db_num}"
@@ -348,6 +387,8 @@ class Command(BaseCommand):
         # Log what was created
         self.stdout.write(f"    Created {created_keys} total keys:")
         self.stdout.write(f"      - {string_count} string keys")
+        if json_keys_created > 0:
+            self.stdout.write(f"      - {json_keys_created} JSON keys")
         self.stdout.write(f"      - {list_count} lists")
         self.stdout.write(f"      - {set_count} sets")
         self.stdout.write(f"      - {hash_count} hashes")
