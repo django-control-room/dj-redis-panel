@@ -755,6 +755,23 @@ class RedisPanelUtils:
                 raw_value = redis_conn.get(key_name)
                 key_value = decoder.decode_value(raw_value) or ""
                 key_size = len(raw_value) if raw_value else 0
+            elif key_type == "ReJSON-RL":
+                # Try RedisJSON 1 compatible root path first
+                key_value = redis_conn.json().get(key_name, ".")
+                if key_value is None:
+                    # Fallback to JSONPath and unwrap singleton list
+                    key_value = redis_conn.json().get(key_name, "$")
+                    if isinstance(key_value, list) and len(key_value) == 1:
+                        key_value = key_value[0]
+                # Calculate size based on JSON type
+                json_type = redis_conn.json().type(key_name, ".")
+                if json_type == "object":
+                    key_size = redis_conn.json().objlen(key_name, ".")
+                elif json_type == "array":
+                    key_size = redis_conn.json().arrlen(key_name, ".")
+                else:
+                    # Scalar root fallback
+                    key_size = 1
             elif key_type == "list":
                 raw_values = redis_conn.lrange(key_name, 0, -1)
                 key_value = decoder.decode_list(raw_values)
@@ -905,7 +922,34 @@ class RedisPanelUtils:
                     )
 
                 return base_response
-
+            elif key_type == "ReJSON-RL":
+                # Try RedisJSON 1 compatible root path first
+                key_value = redis_conn.json().get(key_name, ".")
+                if key_value is None:
+                    # Fallback to JSONPath and unwrap singleton list
+                    key_value = redis_conn.json().get(key_name, "$")
+                    if isinstance(key_value, list) and len(key_value) == 1:
+                        key_value = key_value[0]
+                # Calculate size based on JSON type
+                json_type = redis_conn.json().type(key_name, ".")
+                if json_type == "object":
+                    key_size = redis_conn.json().objlen(key_name, ".")
+                elif json_type == "array":
+                    key_size = redis_conn.json().arrlen(key_name, ".")
+                else:
+                    # Scalar root fallback
+                    key_size = 1
+                base_response = {
+                    "name": key_name,
+                    "type": key_type,
+                    "ttl": ttl if ttl > 0 else None,
+                    "size": key_size,
+                    "value": key_value,
+                    "exists": True,
+                    "error": None,
+                    "is_paginated": False,
+                }
+                return base_response
             elif key_type == "list":
                 key_size = redis_conn.llen(key_name)
             elif key_type == "set":
