@@ -35,10 +35,10 @@ class TestInstanceOverviewView(RedisTestCase):
         """Set up test data specific to instance overview tests."""
         # Call parent to get base test data
         super().setup_redis_test_data()
-        
+
         # Add instance-overview specific test data
         self.redis_conn.select(15)
-        
+
         # Additional keys for instance overview testing
         overview_data = {
             'overview:string': 'string_value',
@@ -47,17 +47,40 @@ class TestInstanceOverviewView(RedisTestCase):
             'overview:cache': 'cached_content',
             'overview:temp': 'temporary_value',
         }
-        
+
         for key, value in overview_data.items():
             self.redis_conn.set(key, value)
-        
+
         # Add key with TTL and additional data types
         self.redis_conn.setex('overview:temp_ttl', 3600, 'temp_with_ttl')
         self.redis_conn.lpush('overview:list', 'item1', 'item2', 'item3')
         self.redis_conn.sadd('overview:set', 'member1', 'member2')
         self.redis_conn.hset('overview:hash', mapping={'field1': 'value1', 'field2': 'value2'})
         self.redis_conn.zadd('overview:zset', {'member1': 1.0, 'member2': 2.0})
-        
+
+        # Add ReJSON-RL keys if module is available
+        if self.redis_json_available:
+            import json
+            self.add_rejson_key('overview:json:user', {
+                'name': 'John Doe',
+                'email': 'john@example.com',
+                'age': 30
+            })
+            self.add_rejson_key('overview:json:config', {
+                'debug': True,
+                'max_connections': 100,
+                'timeout': 30
+            })
+            self.add_rejson_key('overview:json:nested', {
+                'user': {
+                    'name': 'Jane',
+                    'profile': {
+                        'bio': 'Test user',
+                        'location': 'NYC'
+                    }
+                }
+            })
+
         # Add specific data to database 14 for multi-database testing
         conn_14 = redis.Redis(host=os.environ.get('REDIS_HOST', '127.0.0.1'), port=6379, db=14, decode_responses=True)
         multi_db_data = {
@@ -382,18 +405,84 @@ class TestInstanceOverviewView(RedisTestCase):
         """Test that Redis INFO command data is properly integrated."""
         url = reverse('dj_redis_panel:instance_overview', args=['test_redis'])
         response = self.client.get(url)
-        
+
         hero_numbers = response.context['hero_numbers']
-        
+
         # Version should be a valid Redis version string
         version = hero_numbers['version']
         self.assertIsInstance(version, str)
         self.assertNotEqual(version, 'Unknown')
-        
+
         # Memory values should be present and formatted
         memory_used = hero_numbers['memory_used']
         self.assertIsInstance(memory_used, str)
         self.assertNotEqual(memory_used, 'Unknown')
-        
+
         # Should contain typical Redis memory format (e.g., "1.23M", "456K")
         self.assertTrue(any(char.isdigit() for char in memory_used))
+
+    def test_instance_overview_with_rejson_keys(self):
+        """Test instance overview with ReJSON-RL keys when module is available."""
+        if not self.redis_json_available:
+            self.skipTest("RedisJSON module not available")
+
+        url = reverse('dj_redis_panel:instance_overview', args=['test_redis'])
+        response = self.client.get(url)
+
+        # Should still work successfully
+        self.assertEqual(response.status_code, 200)
+
+        # Check that database 15 has our ReJSON-RL keys
+        databases = response.context['databases']
+        db15 = next((db for db in databases if db['db_number'] == 15), None)
+        self.assertIsNotNone(db15, "Database 15 should be present")
+
+        # Should have at least our ReJSON-RL keys
+        self.assertGreaterEqual(db15['keys'], 3)
+
+    def test_instance_overview_rejson_key_type_detection(self):
+        """Test that ReJSON-RL keys are correctly identified during key scanning."""
+        if not self.redis_json_available:
+            self.skipTest("RedisJSON module not available")
+
+        # Verify the ReJSON-RL keys exist and have correct type
+        self.redis_conn.select(15)
+        key_type = self.redis_conn.type('overview:json:user')
+        self.assertEqual(key_type, 'ReJSON-RL', "ReJSON-RL key should have correct type")
+
+        key_type = self.redis_conn.type('overview:json:config')
+        self.assertEqual(key_type, 'ReJSON-RL', "ReJSON-RL key should have correct type")
+
+        key_type = self.redis_conn.type('overview:json:nested')
+        self.assertEqual(key_type, 'ReJSON-RL', "ReJSON-RL key should have correct type")
+
+    def test_instance_overview_rejson_key_size_calculation(self):
+        """Test that ReJSON-RL key size is correctly calculated using MEMORY USAGE."""
+        if not self.redis_json_available:
+            self.skipTest("RedisJSON module not available")
+
+        # Verify size calculation using MEMORY USAGE (not JSON.GET)
+        self.redis_conn.select(15)
+        size = self.redis_conn.execute_command("MEMORY USAGE", 'overview:json:user')
+
+        # Size should be the memory usage in bytes
+        self.assertGreater(size, 0, "ReJSON-RL key should have a memory size")
+
+    def test_instance_overview_rejson_key_value_retrieval(self):
+        """Test that ReJSON-RL key values can be retrieved correctly."""
+        if not self.redis_json_available:
+            self.skipTest("RedisJSON module not available")
+
+        # Verify value retrieval
+        self.redis_conn.select(15)
+        raw_value = self.redis_conn.execute_command("JSON.GET", 'overview:json:user', '.')
+        if raw_value is None:
+            raw_value = self.redis_conn.execute_command("JSON.GET", 'overview:json:user', '$')
+
+        self.assertIsNotNone(raw_value, "ReJSON-RL key value should not be None")
+
+        # Verify it's valid JSON
+        import json
+        parsed = json.loads(raw_value)
+        self.assertIn('name', parsed, "ReJSON-RL key should contain expected fields")
+        self.assertEqual(parsed['name'], 'John Doe')

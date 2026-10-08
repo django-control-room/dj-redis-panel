@@ -132,7 +132,7 @@
             <span class="dcr-badge dcr-badge--info">{{ key_info.type|upper }}</span>
           </td>
           <td class="dcr-col--right">
-            {% if key_info.type == 'string' %}
+            {% if key_info.type == 'string' or key_info.type == 'ReJSON-RL' %}
             {{ key_info.size }} {% trans "bytes" %}
             {% else %}
             {{ key_info.size }} {% trans "items" %}

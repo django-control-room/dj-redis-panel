@@ -495,6 +495,13 @@ class RedisPanelUtils:
                     if key_type == "string":
                         raw_value = redis_conn.get(key)
                         size = len(raw_value) if raw_value else 0
+                    elif key_type == "ReJSON-RL":
+                        # Use MEMORY USAGE to get size without retrieving full document
+                        try:
+                            size = redis_conn.execute_command("MEMORY USAGE", key)
+                        except Exception:
+                            # Fallback to 0 if MEMORY USAGE fails
+                            size = 0
                     elif key_type == "list":
                         size = redis_conn.llen(key)
                     elif key_type == "set":
@@ -647,6 +654,13 @@ class RedisPanelUtils:
                     if key_type == "string":
                         raw_value = redis_conn.get(key)
                         size = len(raw_value) if raw_value else 0
+                    elif key_type == "ReJSON-RL":
+                        # Use MEMORY USAGE to get size without retrieving full document
+                        try:
+                            size = redis_conn.execute_command("MEMORY USAGE", key)
+                        except Exception:
+                            # Fallback to 0 if MEMORY USAGE fails
+                            size = 0
                     elif key_type == "list":
                         size = redis_conn.llen(key)
                     elif key_type == "set":
@@ -753,6 +767,12 @@ class RedisPanelUtils:
 
             if key_type == "string":
                 raw_value = redis_conn.get(key_name)
+                key_value = decoder.decode_value(raw_value) or ""
+                key_size = len(raw_value) if raw_value else 0
+            elif key_type == "ReJSON-RL":
+                raw_value = redis_conn.execute_command("JSON.GET", key_name, ".")
+                if raw_value is None:
+                    raw_value = redis_conn.execute_command("JSON.GET", key_name, "$")
                 key_value = decoder.decode_value(raw_value) or ""
                 key_size = len(raw_value) if raw_value else 0
             elif key_type == "list":
@@ -905,7 +925,23 @@ class RedisPanelUtils:
                     )
 
                 return base_response
-
+            elif key_type == "ReJSON-RL":
+                raw_value = redis_conn.execute_command("JSON.GET", key_name, ".")
+                if raw_value is None:
+                    raw_value = redis_conn.execute_command("JSON.GET", key_name, "$")
+                key_value = decoder.decode_value(raw_value) or ""
+                key_size = len(raw_value) if raw_value else 0
+                base_response = {
+                    "name": key_name,
+                    "type": key_type,
+                    "ttl": ttl if ttl > 0 else None,
+                    "size": key_size,
+                    "value": key_value,
+                    "exists": True,
+                    "error": None,
+                    "is_paginated": False,
+                }
+                return base_response
             elif key_type == "list":
                 key_size = redis_conn.llen(key_name)
             elif key_type == "set":

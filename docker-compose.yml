@@ -24,7 +24,7 @@ services:
 
   # Standalone Redis server
   redis:
-    image: redis:7
+    image: redis:8
     ports:
       - "6379:6379"
 
@@ -36,7 +36,7 @@ services:
   # Start with SSL: docker compose --profile all up -d
 
   redis-node-0:
-    image: redis:7
+    image: redis:8
     ports:
       - "9000:6379"
       - "17000:16379"
@@ -45,7 +45,7 @@ services:
       - redis-cluster
 
   redis-node-1:
-    image: redis:7
+    image: redis:8
     ports:
       - "9001:6379"
       - "17001:16379"
@@ -54,7 +54,7 @@ services:
       - redis-cluster
 
   redis-node-2:
-    image: redis:7
+    image: redis:8
     ports:
       - "9002:6379"
       - "17002:16379"
@@ -64,7 +64,7 @@ services:
 
   # Cluster initialization (non-SSL)
   redis-cluster-init:
-    image: redis:7
+    image: redis:8
     depends_on:
       - redis-node-0
       - redis-node-1
@@ -85,7 +85,7 @@ services:
   # Ports 9100-9102: non-SSL, 9110-9112: SSL
 
   redis-node-0-ssl:
-    image: redis:7
+    image: redis:8
     ports:
       - "9100:6379"
       - "9110:6380"
@@ -101,7 +101,7 @@ services:
       - all
 
   redis-node-1-ssl:
-    image: redis:7
+    image: redis:8
     ports:
       - "9101:6379"
       - "9111:6380"
@@ -117,7 +117,7 @@ services:
       - all
 
   redis-node-2-ssl:
-    image: redis:7
+    image: redis:8
     ports:
       - "9102:6379"
       - "9112:6380"
@@ -134,7 +134,7 @@ services:
 
   # Cluster initialization (SSL)
   redis-cluster-init-ssl:
-    image: redis:7
+    image: redis:8
     depends_on:
       - redis-node-0-ssl
       - redis-node-1-ssl

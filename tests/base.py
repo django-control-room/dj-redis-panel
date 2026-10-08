@@ -41,6 +41,19 @@ class RedisTestCase(TestCase):
         else:
             cls.redis_available = True
 
+        # Check if RedisJSON module is available
+        cls.redis_json_available = False
+        if cls.redis_available:
+            try:
+                # Try to execute a JSON.SET command to check if RedisJSON is loaded
+                cls.redis_conn.execute_command("JSON.SET", "test:json:check", "$", "{}")
+                cls.redis_conn.delete("test:json:check")
+                cls.redis_json_available = True
+            except redis.exceptions.ResponseError as e:
+                # RedisJSON module not available
+                if "unknown command" in str(e):
+                    cls.redis_json_available = False
+
     def setUp(self):
         """Set up test data before each test."""
         if not self.redis_available:
@@ -317,3 +330,30 @@ class RedisTestCase(TestCase):
         redis_host = os.environ.get("REDIS_HOST", "127.0.0.1")
         conn = redis.Redis(host=redis_host, port=6379, db=db, decode_responses=True)
         return conn.get(key)
+
+    def add_rejson_key(self, key, value, db=15):
+        """
+        Helper method to add a ReJSON-RL key to Redis.
+
+        Args:
+            key: Redis key name
+            value: JSON-serializable value (dict, list, etc.)
+            db: Database number (default: 15)
+
+        Returns:
+            bool: True if successful, False if RedisJSON not available
+        """
+        if not self.redis_json_available:
+            return False
+
+        import json
+
+        redis_host = os.environ.get("REDIS_HOST", "127.0.0.1")
+        conn = redis.Redis(host=redis_host, port=6379, db=db, decode_responses=True)
+        try:
+            # Serialize value to JSON string before sending
+            json_string = json.dumps(value)
+            conn.execute_command("JSON.SET", key, "$", json_string)
+            return True
+        except redis.exceptions.ResponseError:
+            return False
