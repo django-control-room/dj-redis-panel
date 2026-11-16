@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Union
 
 
@@ -69,6 +70,13 @@ class RedisValueDecoder:
         Decode a list of (member, score) tuples from a sorted set.
         """
         return [(self.decode_value(member), score) for member, score in values]
+
+    def decode_re_json_rl(self, value: bytes) -> str:
+        """
+        Decode a RedisJSON document into pretty-printed JSON text.
+        """
+        # RedisJSON always returns UTF-8 JSON text, so the configured encoder doesn't apply
+        return json.dumps(json.loads(value), indent=2, ensure_ascii=False)
 
     def encode_for_redis(self, value: str) -> Union[str, bytes]:
         """

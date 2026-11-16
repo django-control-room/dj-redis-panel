@@ -151,8 +151,8 @@ class Command(BaseCommand):
             options = {}
 
         # Key type distribution (percentages)
-        string_ratio = 0.05  # 65% strings
-        json_ratio = 0.65  # 5% JSON (using json().set())
+        string_ratio = 0.65  # 65% strings
+        json_ratio = 0.05  # 5% JSON (using json().set())
         list_ratio = 0.10  # 10% lists
         set_ratio = 0.08  # 8% sets
         hash_ratio = 0.08  # 8% hashes

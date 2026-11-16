@@ -770,11 +770,9 @@ class RedisPanelUtils:
                 key_value = decoder.decode_value(raw_value) or ""
                 key_size = len(raw_value) if raw_value else 0
             elif key_type == "ReJSON-RL":
-                raw_value = redis_conn.execute_command("JSON.GET", key_name, ".")
-                if raw_value is None:
-                    raw_value = redis_conn.execute_command("JSON.GET", key_name, "$")
-                key_value = decoder.decode_value(raw_value) or ""
-                key_size = len(raw_value) if raw_value else 0
+                raw_value = redis_conn.execute_command("JSON.GET", key_name)
+                key_value = decoder.decode_re_json_rl(raw_value)
+                key_size = len(raw_value)
             elif key_type == "list":
                 raw_values = redis_conn.lrange(key_name, 0, -1)
                 key_value = decoder.decode_list(raw_values)
@@ -926,11 +924,9 @@ class RedisPanelUtils:
 
                 return base_response
             elif key_type == "ReJSON-RL":
-                raw_value = redis_conn.execute_command("JSON.GET", key_name, ".")
-                if raw_value is None:
-                    raw_value = redis_conn.execute_command("JSON.GET", key_name, "$")
-                key_value = decoder.decode_value(raw_value) or ""
-                key_size = len(raw_value) if raw_value else 0
+                raw_value = redis_conn.execute_command("JSON.GET", key_name)
+                key_value = decoder.decode_re_json_rl(raw_value)
+                key_size = len(raw_value)
                 base_response = {
                     "name": key_name,
                     "type": key_type,
