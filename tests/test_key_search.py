@@ -251,6 +251,34 @@ class TestKeySearchView(RedisTestCase):
             for i in range(50):
                 self.redis_conn.delete(f'pagination_test:{i}')
 
+    def test_key_search_lists_redisjson_key_with_same_size_as_detail_page(self):
+        self.add_rejson_key('search:json', {'name': 'Ada'})
+
+        search_url = reverse('dj_redis_panel:key_search', args=['test_redis', 15])
+        search_response = self.client.get(search_url, {'q': 'search:json'})
+        detail_url = reverse('dj_redis_panel:key_detail', args=['test_redis', 15, 'search:json'])
+        detail_response = self.client.get(detail_url)
+
+        keys_data = search_response.context['keys_data']
+        self.assertEqual(len(keys_data), 1)
+        self.assertEqual(keys_data[0]['type'], 'ReJSON-RL')
+        self.assertEqual(keys_data[0]['size'], detail_response.context['key_data']['size'])
+        self.assertContains(search_response, f"{keys_data[0]['size']} bytes")
+
+    def test_key_search_with_cursor_pagination_lists_redisjson_key(self):
+        self.add_rejson_key('cursor:json', {'name': 'Ada'}, db=14)
+        conn_14 = redis.Redis(host=os.environ.get('REDIS_HOST', '127.0.0.1'), port=6379, db=14)
+
+        try:
+            url = reverse('dj_redis_panel:key_search', args=['test_redis_no_features', 14])
+            response = self.client.get(url, {'cursor': '0', 'q': 'cursor:json'})
+
+            keys_data = response.context['keys_data']
+            self.assertEqual([key['type'] for key in keys_data], ['ReJSON-RL'])
+            self.assertGreater(keys_data[0]['size'], 0)
+        finally:
+            conn_14.flushdb()
+
 
 class TestGetPageRange(RedisTestCase):
     """Test cases for the _get_page_range utility function."""

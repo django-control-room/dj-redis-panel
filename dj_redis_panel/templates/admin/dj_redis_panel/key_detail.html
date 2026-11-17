@@ -67,7 +67,7 @@
   <div class="dcr-dl__row">
     <dt class="dcr-dl__label">{% trans "Size" %}</dt>
     <dd class="dcr-dl__value">
-      {% if key_data.type == "string" %}
+      {% if key_data.type == "string" or key_data.type == "ReJSON-RL" %}
       {{ key_data.size }} {% trans "bytes" %}
       {% else %}
       {{ key_data.size }} {% trans "elements" %}
@@ -156,6 +156,8 @@
 {% include "admin/dj_redis_panel/key_detail_value_zset.html" %}
 {% elif key_data.type == "hash" %}
 {% include "admin/dj_redis_panel/key_detail_value_hash.html" %}
+{% elif key_data.type == "ReJSON-RL" %}
+{% include "admin/dj_redis_panel/key_detail_value_re_json_rl.html" %}
 {% else %}
 <p class="dcr-text-muted">{% trans "Unsupported key type for display:" %} {{ key_data.type }}</p>
 {% endif %}

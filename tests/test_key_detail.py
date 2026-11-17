@@ -619,3 +619,27 @@ class TestKeyDetailView(RedisTestCase):
             
         finally:
             self.redis_conn.delete(large_list_key)
+
+    def test_key_detail_shows_redisjson_value_as_pretty_printed_json(self):
+        self.add_rejson_key('test:json', {'name': 'Ada', 'tags': ['a', 'b']})
+
+        url = reverse('dj_redis_panel:key_detail', args=['test_redis', 15, 'test:json'])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        key_data = response.context['key_data']
+        self.assertEqual(key_data['type'], 'ReJSON-RL')
+        self.assertEqual(key_data['value'], '{\n  "name": "Ada",\n  "tags": [\n    "a",\n    "b"\n  ]\n}')
+        self.assertContains(response, 'Value editing is not supported for RedisJSON keys.')
+
+    def test_key_detail_ttl_update_on_redisjson_key_keeps_showing_json(self):
+        self.add_rejson_key('test:json_ttl', {'name': 'Ada'})
+
+        url = reverse('dj_redis_panel:key_detail', args=['test_redis', 15, 'test:json_ttl'])
+        response = self.client.post(url, {'action': 'update_ttl', 'new_ttl': '600'})
+
+        self.assertEqual(response.context['success_message'], "TTL set to 600 seconds")
+        key_data = response.context['key_data']
+        self.assertEqual(key_data['type'], 'ReJSON-RL')
+        self.assertEqual(key_data['value'], '{\n  "name": "Ada"\n}')
+        self.assertEqual(key_data['size'], self.redis_conn.memory_usage('test:json_ttl'))

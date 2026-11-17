@@ -317,3 +317,9 @@ class RedisTestCase(TestCase):
         redis_host = os.environ.get("REDIS_HOST", "127.0.0.1")
         conn = redis.Redis(host=redis_host, port=6379, db=db, decode_responses=True)
         return conn.get(key)
+
+    def add_rejson_key(self, key, value, db=15):
+        """Add a RedisJSON (ReJSON-RL) key. Requires Redis 8+."""
+        redis_host = os.environ.get("REDIS_HOST", "127.0.0.1")
+        conn = redis.Redis(host=redis_host, port=6379, db=db)
+        conn.json().set(key, "$", value)
