@@ -5,6 +5,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/dj-redis-panel.svg)](https://pypi.org/project/dj-redis-panel/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/pypi/dm/dj-redis-panel.svg)](https://pypi.org/project/dj-redis-panel/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20chat-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/aJgys9TFvA)
 
 
 # Django Redis Panel
