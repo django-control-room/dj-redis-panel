@@ -496,12 +496,8 @@ class RedisPanelUtils:
                         raw_value = redis_conn.get(key)
                         size = len(raw_value) if raw_value else 0
                     elif key_type == "ReJSON-RL":
-                        # Use MEMORY USAGE to get size without retrieving full document
-                        try:
-                            size = redis_conn.execute_command("MEMORY USAGE", key)
-                        except Exception:
-                            # Fallback to 0 if MEMORY USAGE fails
-                            size = 0
+                        # MEMORY USAGE avoids fetching the whole document just to size it
+                        size = redis_conn.memory_usage(key)
                     elif key_type == "list":
                         size = redis_conn.llen(key)
                     elif key_type == "set":
@@ -655,12 +651,8 @@ class RedisPanelUtils:
                         raw_value = redis_conn.get(key)
                         size = len(raw_value) if raw_value else 0
                     elif key_type == "ReJSON-RL":
-                        # Use MEMORY USAGE to get size without retrieving full document
-                        try:
-                            size = redis_conn.execute_command("MEMORY USAGE", key)
-                        except Exception:
-                            # Fallback to 0 if MEMORY USAGE fails
-                            size = 0
+                        # MEMORY USAGE avoids fetching the whole document just to size it
+                        size = redis_conn.memory_usage(key)
                     elif key_type == "list":
                         size = redis_conn.llen(key)
                     elif key_type == "set":
@@ -772,7 +764,8 @@ class RedisPanelUtils:
             elif key_type == "ReJSON-RL":
                 raw_value = redis_conn.execute_command("JSON.GET", key_name)
                 key_value = decoder.decode_re_json_rl(raw_value)
-                key_size = len(raw_value)
+                # Same measure as the key search list, which can't afford to fetch documents
+                key_size = redis_conn.memory_usage(key_name)
             elif key_type == "list":
                 raw_values = redis_conn.lrange(key_name, 0, -1)
                 key_value = decoder.decode_list(raw_values)
@@ -926,7 +919,8 @@ class RedisPanelUtils:
             elif key_type == "ReJSON-RL":
                 raw_value = redis_conn.execute_command("JSON.GET", key_name)
                 key_value = decoder.decode_re_json_rl(raw_value)
-                key_size = len(raw_value)
+                # Same measure as the key search list, which can't afford to fetch documents
+                key_size = redis_conn.memory_usage(key_name)
                 base_response = {
                     "name": key_name,
                     "type": key_type,
